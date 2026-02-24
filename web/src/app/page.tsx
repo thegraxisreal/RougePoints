@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { Map } from "@/components/Map";
 
 export default function Home() {
@@ -7,7 +8,7 @@ export default function Home() {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
         <title>RoguePoints — Every place has a story</title>
-        <script src="https://cdn.tailwindcss.com"></script>
+
         <meta name="color-scheme" content="dark" />
       </head>
       <body className="bg-black text-white antialiased selection:bg-white/10">
@@ -226,15 +227,15 @@ export default function Home() {
                                     rounded-xl border border-blue-400/50 bg-black/90 backdrop-blur p-3 shadow-lg transition
                                     group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:translate-x-0 group-focus-within:scale-100">
                           <div className="flex items-center gap-3">
-                            <img src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=240&q=60"
-                                 alt="Portrait of Sam" className="h-12 w-12 rounded-lg object-cover"/>
+                            <Image src="https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=240&q=60"
+                                 alt="Portrait of Sam" width={48} height={48} className="h-12 w-12 rounded-lg object-cover"/>
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-blue-300 truncate">Sam R.</p>
                               <p className="text-xs text-white/70 truncate">Barcelona, ES</p>
                             </div>
                           </div>
                           <p className="mt-2 text-sm text-white/80">
-                            "Hidden jazz club behind the bakery. Ask for Marta."
+                            &ldquo;Hidden jazz club behind the bakery. Ask for Marta.&rdquo;
                           </p>
                         </div>
                       </div>
@@ -252,15 +253,15 @@ export default function Home() {
                                     rounded-xl border border-green-400/50 bg-black/90 backdrop-blur p-3 shadow-lg transition
                                     group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:translate-x-0 group-focus-within:scale-100">
                           <div className="flex items-center gap-3">
-                            <img src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=240&q=60"
-                                 alt="Portrait of Jules" className="h-12 w-12 rounded-lg object-cover"/>
+                            <Image src="https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=240&q=60"
+                                 alt="Portrait of Jules" width={48} height={48} className="h-12 w-12 rounded-lg object-cover"/>
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-green-300 truncate">Jules T.</p>
                               <p className="text-xs text-white/70 truncate">Brooklyn, NY</p>
                             </div>
                           </div>
                           <p className="mt-2 text-sm text-white/80">
-                            "Best dumplings. Cash only. Order from the basement window."
+                            &ldquo;Best dumplings. Cash only. Order from the basement window.&rdquo;
                           </p>
                         </div>
                       </div>
@@ -278,15 +279,15 @@ export default function Home() {
                                     rounded-xl border border-red-400/60 bg-black/90 backdrop-blur p-3 shadow-lg transition
                                     group-hover:opacity-100 group-hover:translate-x-0 group-hover:scale-100 group-focus-within:opacity-100 group-focus-within:translate-x-0 group-focus-within:scale-100">
                           <div className="flex items-center gap-3">
-                            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=60"
-                                 alt="Portrait of Kenji" className="h-12 w-12 rounded-lg object-cover"/>
+                            <Image src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=60"
+                                 alt="Portrait of Kenji" width={48} height={48} className="h-12 w-12 rounded-lg object-cover"/>
                             <div className="min-w-0">
                               <p className="text-sm font-semibold text-red-300 truncate">Kenji S.</p>
                               <p className="text-xs text-white/70 truncate">Shinjuku, JP</p>
                             </div>
                           </div>
                           <p className="mt-2 text-sm text-white/80">
-                            "The ghost in Room 27 knocks twice. I heard it."
+                            &ldquo;The ghost in Room 27 knocks twice. I heard it.&rdquo;
                           </p>
                         </div>
                       </div>
@@ -350,7 +351,7 @@ export default function Home() {
             <div className="" data-animate>
               <h2 className="text-2xl sm:text-3xl font-bold">A living map of inside jokes and whispered legends.</h2>
               <p className="mt-3 text-white/70">
-                Drop a pin anywhere and attach a micro‑story. See the city through everyone's
+                Drop a pin anywhere and attach a micro‑story. See the city through everyone&apos;s
                 mythologies—moments that live on in the group chat and fade everywhere else.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
@@ -412,8 +413,8 @@ export default function Home() {
           <div className="mx-auto max-w-3xl px-4 sm:px-6 text-center" data-animate>
             <h2 className="text-3xl sm:text-4xl font-bold">Stories That Live on the Map.</h2>
             <p className="mt-4 text-white/70">
-              Stumble on a rooftop party that became lore. Read a stranger's note about the
-              tree they carved initials into. Follow breadcrumbs to the best dumplings you've never posted.
+              Stumble on a rooftop party that became lore. Read a stranger&apos;s note about the
+              tree they carved initials into. Follow breadcrumbs to the best dumplings you&apos;ve never posted.
             </p>
             <a href="#home" className="mt-7 inline-flex items-center rounded-full border border-blue-400/50 px-5 py-3 font-semibold text-blue-300 hover:bg-blue-400/10 active:scale-[.98] transition">
               Read More Stories
