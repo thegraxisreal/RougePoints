@@ -25,34 +25,34 @@ function makePinIcon(color: string) {
 const PINS = [
   {
     id: 1,
-    position: [41.3851, 2.1734] as [number, number],
+    position: [37.7694, -122.4862] as [number, number],
     color: "#60a5fa",
     accentClass: "text-blue-300",
     user: "Sam R.",
-    location: "Barcelona, ES",
-    story: "Hidden jazz club behind the bakery. Ask for Marta.",
+    location: "Outer Sunset, SF",
+    story: "Taqueria behind the laundromat on Noriega. No sign. Just knock.",
     tag: "secret",
     reactions: "😮 47  🔥 23",
   },
   {
     id: 2,
-    position: [40.6782, -73.9442] as [number, number],
+    position: [37.7599, -122.4148] as [number, number],
     color: "#22c55e",
     accentClass: "text-green-300",
     user: "Jules T.",
-    location: "Brooklyn, NY",
-    story: "Best dumplings. Cash only. Order from the basement window.",
+    location: "The Mission, SF",
+    story: "Best burrito in the city. Cash only. Don't ask for a menu.",
     tag: "legend",
     reactions: "🔥 91  ❤️ 34",
   },
   {
     id: 3,
-    position: [35.6938, 139.7036] as [number, number],
+    position: [37.8024, -122.4058] as [number, number],
     color: "#ef4444",
     accentClass: "text-red-300",
     user: "Kenji S.",
-    location: "Shinjuku, JP",
-    story: "The ghost in Room 27 knocks twice. I heard it.",
+    location: "Chinatown, SF",
+    story: "Third floor above the herbalist. Speakeasy. Password changes weekly.",
     tag: "mystery",
     reactions: "😮 203  👻 87",
   },
@@ -61,8 +61,8 @@ const PINS = [
 export function LandingMap() {
   return (
     <MapContainer
-      center={[35, 20]}
-      zoom={2}
+      center={[37.775, -122.435]}
+      zoom={13}
       scrollWheelZoom={false}
       zoomControl={false}
       attributionControl={true}
