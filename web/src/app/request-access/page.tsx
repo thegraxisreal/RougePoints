@@ -5,6 +5,7 @@ import Link from "next/link";
 
 export default function RequestAccess() {
   const [mounted, setMounted] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     requestAnimationFrame(() => setMounted(true));
@@ -123,58 +124,82 @@ export default function RequestAccess() {
           Invite-only for now. Leave your email and we&rsquo;ll drop you in when a spot opens.
         </p>
 
-        {/* Form */}
-        <form
-          onSubmit={(e) => e.preventDefault()}
-          className="flex w-full max-w-sm flex-col gap-3"
-        >
-          <div className="relative">
-            <input
-              type="email"
-              required
-              placeholder="your@email.com"
-              autoComplete="email"
-              className="w-full rounded-2xl border bg-white/[0.03] px-5 py-4 text-[15px] text-white placeholder:text-white/20 outline-none transition-all"
+        {submitted ? (
+          /* ── Submitted state ── */
+          <div className="flex w-full max-w-sm flex-col items-center gap-4 text-center">
+            <div
+              className="flex h-12 w-12 items-center justify-center rounded-full"
               style={{
-                borderColor: "rgba(255,255,255,0.08)",
-                caretColor: "#fbbf24",
+                background: "rgba(251,191,36,0.1)",
+                border: "1px solid rgba(251,191,36,0.25)",
+                boxShadow: "0 0 24px rgba(251,191,36,0.12)",
               }}
-              onFocus={(e) => {
-                e.currentTarget.style.borderColor = "rgba(251,191,36,0.35)";
-                e.currentTarget.style.boxShadow = "0 0 0 3px rgba(251,191,36,0.08)";
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            />
+            >
+              <svg viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="#fbbf24" strokeWidth="2">
+                <path d="M4 10l4.5 4.5L16 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <p className="text-[15px] font-semibold text-white/80">You&rsquo;re on the list.</p>
+            <p className="text-[13px] leading-relaxed text-white/35">
+              We&rsquo;ll reach out when your spot opens up.
+            </p>
           </div>
+        ) : (
+          <>
+            {/* Form */}
+            <form
+              onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}
+              className="flex w-full max-w-sm flex-col gap-3"
+            >
+              <div className="relative">
+                <input
+                  type="email"
+                  required
+                  placeholder="your@email.com"
+                  autoComplete="email"
+                  className="w-full rounded-2xl border bg-white/[0.03] px-5 py-4 text-[15px] text-white placeholder:text-white/20 outline-none transition-all"
+                  style={{
+                    borderColor: "rgba(255,255,255,0.08)",
+                    caretColor: "#fbbf24",
+                  }}
+                  onFocus={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(251,191,36,0.35)";
+                    e.currentTarget.style.boxShadow = "0 0 0 3px rgba(251,191,36,0.08)";
+                  }}
+                  onBlur={(e) => {
+                    e.currentTarget.style.borderColor = "rgba(255,255,255,0.08)";
+                    e.currentTarget.style.boxShadow = "none";
+                  }}
+                />
+              </div>
 
-          <button
-            type="submit"
-            className="w-full rounded-2xl py-4 text-[15px] font-semibold text-black transition-all active:scale-[0.98]"
-            style={{
-              background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
-              boxShadow: "0 4px 24px rgba(251,191,36,0.25), 0 1px 0 rgba(255,255,255,0.1) inset",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.boxShadow = "0 6px 32px rgba(251,191,36,0.38), 0 1px 0 rgba(255,255,255,0.1) inset";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.boxShadow = "0 4px 24px rgba(251,191,36,0.25), 0 1px 0 rgba(255,255,255,0.1) inset";
-            }}
-          >
-            Request access
-          </button>
-        </form>
+              <button
+                type="submit"
+                className="w-full rounded-2xl py-4 text-[15px] font-semibold text-black transition-all active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, #fbbf24, #f59e0b)",
+                  boxShadow: "0 4px 24px rgba(251,191,36,0.25), 0 1px 0 rgba(255,255,255,0.1) inset",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.boxShadow = "0 6px 32px rgba(251,191,36,0.38), 0 1px 0 rgba(255,255,255,0.1) inset";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.boxShadow = "0 4px 24px rgba(251,191,36,0.25), 0 1px 0 rgba(255,255,255,0.1) inset";
+                }}
+              >
+                Request access
+              </button>
+            </form>
 
-        {/* Sign in */}
-        <p className="mt-7 text-[13px] text-white/25">
-          Already have an invite?{" "}
-          <a href="#" className="text-white/40 underline underline-offset-2 hover:text-amber-300 transition-colors">
-            Sign in →
-          </a>
-        </p>
+            {/* Sign in */}
+            <p className="mt-7 text-[13px] text-white/25">
+              Already have an invite?{" "}
+              <a href="#" className="text-white/40 underline underline-offset-2 hover:text-amber-300 transition-colors">
+                Sign in →
+              </a>
+            </p>
+          </>
+        )}
       </div>
 
       {/* ── Bottom coordinates ── */}

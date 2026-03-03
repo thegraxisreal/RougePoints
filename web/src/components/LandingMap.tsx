@@ -168,7 +168,7 @@ export function LandingMap() {
   const CARD_W = 240;
   const CARD_H = 162; // approximate height for connector line calc
   const OFFSET_X = 96;  // px right of pin center
-  const OFFSET_Y = 200; // px above pin tip
+  const OFFSET_Y = 280; // px above pin tip — tall enough to clear the hero text at the bottom
 
   const pinPx = pinPositions[activeIdx];
   const containerW = containerRef.current?.offsetWidth ?? 900;
@@ -177,8 +177,8 @@ export function LandingMap() {
   let cardTop = 0;
 
   if (pinPx) {
-    // Clamp so card doesn't overflow right or top edge
-    cardLeft = Math.min(pinPx.x + OFFSET_X, containerW - CARD_W - 16);
+    // Clamp so card doesn't overflow any edge
+    cardLeft = Math.max(Math.min(pinPx.x + OFFSET_X, containerW - CARD_W - 16), 16);
     cardTop = Math.max(pinPx.y - OFFSET_Y, 16);
   }
 
