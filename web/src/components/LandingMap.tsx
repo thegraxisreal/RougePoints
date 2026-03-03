@@ -28,7 +28,7 @@ function makePinIcon(color: string, active: boolean) {
 
 const PINS = [
   {
-    position: [37.7749, -122.4194] as [number, number],
+    position: [37.7749, -122.3900] as [number, number],
     color: "#60a5fa",
     user: "damian + @alexmason",
     location: "Civic Center, SF",
