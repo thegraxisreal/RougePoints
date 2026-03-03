@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -14,20 +15,26 @@ const COUNT_FIELD: Record<ReactionKind, string> = {
   wow: "wowCount",
 };
 
-// Stub until auth is wired up
-const STUB_USER_ID = "stub";
-
 // ─── POST /api/pins/[id]/reactions ────────────────────────────────────────────
 // Body: { kind: "fire" | "skull" | "heart" | "laugh" | "wow" }
-// Adds a reaction; if the user already reacted with this kind, it's a no-op.
 
 export async function POST(req: NextRequest, { params }: Params) {
+  let user;
+  try {
+    user = await requireUser();
+  } catch (err) {
+    return err as NextResponse;
+  }
+
   const { id: pinId } = await params;
   const body = await req.json().catch(() => null);
   const kind: ReactionKind = body?.kind;
 
   if (!VALID_KINDS.includes(kind)) {
-    return NextResponse.json({ error: "kind must be one of: fire, skull, heart, laugh, wow" }, { status: 400 });
+    return NextResponse.json(
+      { error: "kind must be one of: fire, skull, heart, laugh, wow" },
+      { status: 400 }
+    );
   }
 
   const pin = await db.pin.findUnique({ where: { id: pinId } });
@@ -35,17 +42,14 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  const field = COUNT_FIELD[kind];
-
-  // createMany with skipDuplicates would be cleaner but SQLite adapter doesn't support it.
-  // Use upsert-style: try create, ignore unique conflict.
   const existing = await db.reaction.findUnique({
-    where: { userId_pinId_kind: { userId: STUB_USER_ID, pinId, kind } },
+    where: { userId_pinId_kind: { userId: user.id, pinId, kind } },
   });
 
   if (!existing) {
+    const field = COUNT_FIELD[kind];
     await db.$transaction([
-      db.reaction.create({ data: { userId: STUB_USER_ID, pinId, kind } }),
+      db.reaction.create({ data: { userId: user.id, pinId, kind } }),
       db.pin.update({ where: { id: pinId }, data: { [field]: { increment: 1 } } }),
     ]);
   }
@@ -56,6 +60,13 @@ export async function POST(req: NextRequest, { params }: Params) {
 // ─── DELETE /api/pins/[id]/reactions?kind=fire ────────────────────────────────
 
 export async function DELETE(req: NextRequest, { params }: Params) {
+  let user;
+  try {
+    user = await requireUser();
+  } catch (err) {
+    return err as NextResponse;
+  }
+
   const { id: pinId } = await params;
   const kind = req.nextUrl.searchParams.get("kind") as ReactionKind | null;
 
@@ -64,7 +75,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   }
 
   const existing = await db.reaction.findUnique({
-    where: { userId_pinId_kind: { userId: STUB_USER_ID, pinId, kind } },
+    where: { userId_pinId_kind: { userId: user.id, pinId, kind } },
   });
 
   if (existing) {

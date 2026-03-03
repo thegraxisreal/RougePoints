@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
 
 type Params = { params: Promise<{ id: string }> };
 
-// ─── GET /api/pins/[id] ───────────────────────────────────────────────────────
+// ─── GET /api/pins/[id] — public ─────────────────────────────────────────────
 
 export async function GET(_req: NextRequest, { params }: Params) {
   const { id } = await params;
@@ -23,16 +24,25 @@ export async function GET(_req: NextRequest, { params }: Params) {
   return NextResponse.json(pin);
 }
 
-// ─── DELETE /api/pins/[id] ────────────────────────────────────────────────────
-// Soft-deletes by setting status = "removed".
-// TODO: verify req.user.id === pin.authorId once auth is wired up.
+// ─── DELETE /api/pins/[id] — requires auth, must be the author ───────────────
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  const { id } = await params;
+  let user;
+  try {
+    user = await requireUser();
+  } catch (err) {
+    return err as NextResponse;
+  }
 
+  const { id } = await params;
   const pin = await db.pin.findUnique({ where: { id } });
+
   if (!pin || pin.status === "removed") {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
+  }
+
+  if (pin.authorId !== user.id) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   await db.pin.update({ where: { id }, data: { status: "removed" } });

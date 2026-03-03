@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { requireUser } from "@/lib/auth";
 
 // ─── GET /api/pins?swLat=&swLng=&neLat=&neLng= ───────────────────────────────
-// Returns all visible pins inside a map bounding box.
+// Public — returns visible pins inside a map bounding box.
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -46,24 +47,16 @@ export async function GET(req: NextRequest) {
 }
 
 // ─── POST /api/pins ───────────────────────────────────────────────────────────
-// Creates a new pin. TODO: replace STUB_USER_ID with real auth in Phase 1.
-
-const STUB_USER_ID = "stub";
-
-async function ensureStubUser() {
-  await db.user.upsert({
-    where: { id: STUB_USER_ID },
-    update: {},
-    create: {
-      id: STUB_USER_ID,
-      authId: "stub",
-      email: "stub@example.com",
-      handle: "anon",
-    },
-  });
-}
+// Requires auth.
 
 export async function POST(req: NextRequest) {
+  let user;
+  try {
+    user = await requireUser();
+  } catch (err) {
+    return err as NextResponse;
+  }
+
   const body = await req.json().catch(() => null);
   if (!body) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
@@ -84,8 +77,6 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  await ensureStubUser();
-
   const pin = await db.pin.create({
     data: {
       lat,
@@ -93,7 +84,7 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       body: pinBody.trim(),
       category,
-      authorId: STUB_USER_ID,
+      authorId: user.id,
     },
   });
 
