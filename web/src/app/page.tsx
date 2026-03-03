@@ -381,13 +381,13 @@ export default function Home() {
                 Features
               </a>
               <a href="/request-access" className="inline-flex items-center rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black hover:bg-amber-300 active:scale-[.97] transition glow-amber-sm cursor-pin">
-                Get Started
+                Sign In
               </a>
             </nav>
 
             {/* Mobile CTA */}
             <a href="/request-access" className="md:hidden inline-flex items-center rounded-full bg-amber-400 px-4 py-1.5 text-sm font-semibold text-black hover:bg-amber-300 active:scale-[.97] transition cursor-pin">
-              Get Started
+              Sign In
             </a>
           </div>
         </div>
@@ -429,7 +429,7 @@ export default function Home() {
 
               <div className="mt-8 flex flex-wrap gap-4" data-animate data-delay="2">
                 <a href="/request-access" className="inline-flex items-center rounded-full bg-amber-400 px-7 py-3.5 font-semibold text-black hover:bg-amber-300 active:scale-[.97] transition glow-amber cursor-pin">
-                  Request Access
+                  Get Started — it&rsquo;s free
                 </a>
                 <a
                   href="#how-it-works"
@@ -914,22 +914,30 @@ export default function Home() {
             </div>
           </div>
 
+          {/* Early access badge */}
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-amber-400/25 bg-amber-400/8 px-4 py-1.5" data-animate>
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 pulse-soft" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-amber-300/80">
+              Early Access
+            </span>
+          </div>
+
           <h2
             className="font-display text-4xl sm:text-6xl tracking-tight"
             data-animate
             data-delay="1"
           >
-            Be part of the map
+            You&rsquo;re in early.
             <br />
-            <em className="text-white/30 italic">from day one.</em>
+            <em className="text-white/30 italic">Drop the first pins.</em>
           </h2>
           <p
             className="mt-5 text-lg text-white/40"
             data-animate
             data-delay="2"
           >
-            RoguePoints is invite-only during beta. A small, tight community
-            building the map before everyone else.
+            The map is just getting started. Sign in and be part of it before
+            everyone else.
           </p>
 
           <div
@@ -938,23 +946,9 @@ export default function Home() {
             data-delay="3"
           >
             <a href="/request-access" className="inline-flex items-center rounded-full bg-amber-400 px-9 py-4 text-base font-semibold text-black hover:bg-amber-300 active:scale-[.97] transition glow-amber cursor-pin">
-              Request an invite
+              Sign in with Google
             </a>
           </div>
-
-          <p
-            className="mt-6 text-sm text-white/25"
-            data-animate
-            data-delay="4"
-          >
-            Already have an invite?{" "}
-            <a
-              href="#"
-              className="text-amber-400/50 underline underline-offset-2 hover:text-amber-300 transition cursor-pin"
-            >
-              Sign in &rarr;
-            </a>
-          </p>
         </div>
       </section>
 
