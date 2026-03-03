@@ -400,13 +400,11 @@ export default function Home() {
         {/* Map as background */}
         <div className="absolute inset-0 z-0">
           <LandingMap />
+          {/* Vignette overlay — inside same stacking context so card (z-20) renders above it */}
+          <div className="absolute inset-0 z-10 vignette pointer-events-none" />
+          {/* Extra bottom fade */}
+          <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#0a0a0f] to-transparent pointer-events-none" />
         </div>
-
-        {/* Vignette overlay */}
-        <div className="absolute inset-0 z-10 vignette" />
-
-        {/* Extra bottom fade */}
-        <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#0a0a0f] to-transparent" />
 
         {/* Content overlay */}
         <div className="relative z-20 flex h-full flex-col justify-end pb-16 sm:pb-24">
