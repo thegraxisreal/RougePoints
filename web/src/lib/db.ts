@@ -1,20 +1,13 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaLibSql } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
 function makeClient() {
   const url = process.env.DATABASE_URL;
+  if (!url) throw new Error("DATABASE_URL is not set");
 
-  // Turso / remote libSQL — use the driver adapter
-  if (url?.startsWith("libsql://") || url?.startsWith("wss://")) {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { createClient } = require("@libsql/client");
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { PrismaLibSql } = require("@prisma/adapter-libsql");
-    const adapter = new PrismaLibSql(createClient({ url }));
-    return new PrismaClient({ adapter });
-  }
-
-  // Local SQLite file — standard client
-  return new PrismaClient();
+  const adapter = new PrismaLibSql(createClient({ url }));
+  return new PrismaClient({ adapter });
 }
 
 declare global {
