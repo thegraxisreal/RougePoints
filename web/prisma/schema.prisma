@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+// SQLite has no native enum type; values are validated at the app layer.
+//   PinStatus   : "pending" | "visible" | "hidden" | "removed"
+//   ReportReason: "spam" | "harassment" | "inappropriate" | "misinformation" | "other"
+//   ReportStatus: "open" | "reviewed" | "dismissed"
+//   MediaState  : "pending" | "processing" | "ready" | "failed"
+//   ReactionKind: "fire" | "skull" | "heart" | "laugh" | "wow"
+
+// ─── User ─────────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Auth provider subject (Supabase / Auth0 user id)
+  authId    String   @unique
+  email     String   @unique
+  handle    String   @unique
+  avatarUrl String?
+  bio       String?
+
+  // Soft-ban: banned users can read but cannot create content
+  banned    Boolean  @default(false)
+
+  pins      Pin[]
+  reactions Reaction[]
+  reports   Report[]   @relation("ReportedBy")
+}
+
+// ─── Pin ──────────────────────────────────────────────────────────────────────
+
+model Pin {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  // Geo coords — plain floats for Phase 0; PostGIS upgrade in Phase 1A
+  lat       Float
+  lng       Float
+
+  title     String
+  body      String
+  category  String   // "funny" | "mystery" | "danger" | "legend" | "wholesome" | "other"
+
+  // Visibility lifecycle
+  status    String   @default("visible") // PinStatus
+
+  // Denormalised reaction counts for fast reads (inc/dec on write)
+  fireCount  Int @default(0)
+  skullCount Int @default(0)
+  heartCount Int @default(0)
+  laughCount Int @default(0)
+  wowCount   Int @default(0)
+
+  media     Media[]
+  reactions Reaction[]
+  reports   Report[]
+}
+
+// ─── Media ────────────────────────────────────────────────────────────────────
+
+model Media {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  pin       Pin      @relation(fields: [pinId], references: [id], onDelete: Cascade)
+  pinId     String
+
+  // S3 object key (relative path, not full URL)
+  s3Key     String
+  mimeType  String
+  state     String   @default("pending") // MediaState
+
+  // Populated after processing
+  width     Int?
+  height    Int?
+  durationS Float?   // video duration — Phase 1A
+}
+
+// ─── Reaction ─────────────────────────────────────────────────────────────────
+
+model Reaction {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  pin       Pin      @relation(fields: [pinId], references: [id], onDelete: Cascade)
+  pinId     String
+
+  kind      String   // ReactionKind
+
+  @@unique([userId, pinId, kind])
+}
+
+// ─── Report ───────────────────────────────────────────────────────────────────
+
+model Report {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  reporter   User   @relation("ReportedBy", fields: [reporterId], references: [id])
+  reporterId String
+  pin        Pin    @relation(fields: [pinId], references: [id], onDelete: Cascade)
+  pinId      String
+
+  reason     String  // ReportReason
+  notes      String? // optional free-text from reporter
+  status     String  @default("open") // ReportStatus
+
+  // Admin review fields
+  reviewedAt DateTime?
+  reviewNote String?
+
+  @@unique([reporterId, pinId]) // one report per user per pin
+}

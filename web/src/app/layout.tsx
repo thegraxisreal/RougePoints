@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Instrument_Serif, DM_Sans } from "next/font/google";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { AppProviders } from "./providers";
 
@@ -33,12 +34,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth" style={{ colorScheme: "dark" }}>
-      <body
-        className={`${instrumentSerif.variable} ${dmSans.variable} bg-[#0a0a0f] text-white antialiased selection:bg-amber-400/20 selection:text-amber-100`}
-      >
-        <AppProviders>{children}</AppProviders>
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="en" className="scroll-smooth" style={{ colorScheme: "dark" }}>
+        <body
+          className={`${instrumentSerif.variable} ${dmSans.variable} bg-[#0a0a0f] text-white antialiased selection:bg-amber-400/20 selection:text-amber-100`}
+        >
+          <AppProviders>{children}</AppProviders>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
