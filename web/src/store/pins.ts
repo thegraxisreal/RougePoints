@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 export type Pin = {
   id: string;
+  authorId: string;
   lat: number;
   lng: number;
   title: string;
@@ -24,6 +25,7 @@ type PinsStore = {
   composeOpen: boolean;
   setPins: (pins: Pin[]) => void;
   addPin: (pin: Pin) => void;
+  removePin: (id: string) => void;
   selectPin: (pin: Pin | null) => void;
   setDropMode: (on: boolean) => void;
   setPendingCoords: (coords: { lat: number; lng: number } | null) => void;
@@ -39,6 +41,7 @@ export const usePinsStore = create<PinsStore>((set) => ({
   composeOpen: false,
   setPins: (pins) => set({ pins }),
   addPin: (pin) => set((s) => ({ pins: [pin, ...s.pins] })),
+  removePin: (id) => set((s) => ({ pins: s.pins.filter((p) => p.id !== id) })),
   selectPin: (pin) => set({ selectedPin: pin }),
   setDropMode: (dropMode) => set({ dropMode }),
   setPendingCoords: (pendingCoords) => set({ pendingCoords }),

@@ -38,6 +38,7 @@ export async function GET(req: NextRequest) {
       wowCount: true,
       createdAt: true,
       author: { select: { handle: true, avatarUrl: true } },
+      authorId: true,
     },
     orderBy: { createdAt: "desc" },
     take: 500,
