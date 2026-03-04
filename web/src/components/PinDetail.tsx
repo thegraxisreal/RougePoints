@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import { useUser } from "@clerk/nextjs";
 import { usePinsStore, Pin } from "@/store/pins";
 
 const CATEGORY_STYLES: Record<string, string> = {
@@ -31,11 +33,48 @@ function timeAgo(dateStr: string): string {
 }
 
 export function PinDetail() {
-  const { selectedPin, selectPin } = usePinsStore();
+  const { selectedPin, selectPin, removePin } = usePinsStore();
+  const { isSignedIn } = useUser();
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+    fetch("/api/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => setCurrentUserId(data?.id ?? null))
+      .catch(() => setCurrentUserId(null));
+  }, [isSignedIn]);
+
+  // Reset delete error when a different pin is selected
+  useEffect(() => {
+    setDeleteError(null);
+  }, [selectedPin?.id]);
 
   if (!selectedPin) return null;
 
   const catStyle = CATEGORY_STYLES[selectedPin.category] ?? CATEGORY_STYLES.other;
+  const isAuthor = currentUserId !== null && currentUserId === selectedPin.authorId;
+
+  async function handleDelete() {
+    if (!selectedPin) return;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      const res = await fetch(`/api/pins/${selectedPin.id}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Failed to delete pin");
+      }
+      removePin(selectedPin.id);
+      selectPin(null);
+    } catch (err) {
+      setDeleteError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setDeleting(false);
+    }
+  }
 
   return (
     <>
@@ -59,14 +98,28 @@ export function PinDetail() {
               </div>
               <h3 className="font-display text-xl text-white leading-tight">{selectedPin.title}</h3>
             </div>
-            <button
-              onClick={() => selectPin(null)}
-              className="flex-shrink-0 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition"
-            >
-              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-                <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1 flex-shrink-0">
+              {isAuthor && (
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  title="Delete your pin"
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-red-400/60 hover:text-red-400 hover:bg-red-400/10 transition disabled:opacity-40"
+                >
+                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                    <path fillRule="evenodd" d="M8.75 1A2.75 2.75 0 0 0 6 3.75v.443c-.795.077-1.584.176-2.365.298a.75.75 0 1 0 .23 1.482l.149-.022.841 10.518A2.75 2.75 0 0 0 7.596 19h4.807a2.75 2.75 0 0 0 2.742-2.53l.841-10.52.149.023a.75.75 0 0 0 .23-1.482A41.03 41.03 0 0 0 14 4.193V3.75A2.75 2.75 0 0 0 11.25 1h-2.5ZM10 4c.84 0 1.673.025 2.5.075V3.75c0-.69-.56-1.25-1.25-1.25h-2.5c-.69 0-1.25.56-1.25 1.25v.325C8.327 4.025 9.16 4 10 4ZM8.58 7.72a.75.75 0 0 0-1.5.06l.3 7.5a.75.75 0 1 0 1.5-.06l-.3-7.5Zm4.34.06a.75.75 0 1 0-1.5-.06l-.3 7.5a.75.75 0 1 0 1.5.06l.3-7.5Z" clipRule="evenodd" />
+                  </svg>
+                </button>
+              )}
+              <button
+                onClick={() => selectPin(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Story body */}
@@ -92,6 +145,10 @@ export function PinDetail() {
               {selectedPin.lat.toFixed(4)}, {selectedPin.lng.toFixed(4)}
             </span>
           </div>
+
+          {deleteError && (
+            <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2 mb-4">{deleteError}</p>
+          )}
 
           {/* Reactions */}
           <div className="flex gap-2 flex-wrap">
