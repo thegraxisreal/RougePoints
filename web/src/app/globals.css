@@ -304,3 +304,17 @@ body {
   background: rgba(251, 191, 36, 0.5);
   transform: rotate(-1deg);
 }
+
+/* ── Slide-up animation for PinDetail panel ── */
+@keyframes slide-up {
+  from { transform: translateY(100%); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+.animate-slide-up {
+  animation: slide-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ── Leaflet app map: hide attribution (shown on landing, not needed in app) ── */
+.leaflet-control-attribution {
+  display: none;
+}

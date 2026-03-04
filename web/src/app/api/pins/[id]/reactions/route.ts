@@ -19,11 +19,9 @@ const COUNT_FIELD: Record<ReactionKind, string> = {
 // Body: { kind: "fire" | "skull" | "heart" | "laugh" | "wow" }
 
 export async function POST(req: NextRequest, { params }: Params) {
-  let user;
-  try {
-    user = await requireUser();
-  } catch (err) {
-    return err as NextResponse;
+  const user = await requireUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: pinId } = await params;
@@ -60,11 +58,9 @@ export async function POST(req: NextRequest, { params }: Params) {
 // ─── DELETE /api/pins/[id]/reactions?kind=fire ────────────────────────────────
 
 export async function DELETE(req: NextRequest, { params }: Params) {
-  let user;
-  try {
-    user = await requireUser();
-  } catch (err) {
-    return err as NextResponse;
+  const user = await requireUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: pinId } = await params;

@@ -50,43 +50,52 @@ export async function GET(req: NextRequest) {
 // Requires auth.
 
 export async function POST(req: NextRequest) {
-  let user;
   try {
-    user = await requireUser();
+    const user = await requireUser();
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await req.json().catch(() => null);
+    if (!body) {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+    }
+
+    const { lat, lng, title, body: pinBody, category } = body;
+
+    if (
+      typeof lat !== "number" ||
+      typeof lng !== "number" ||
+      typeof title !== "string" ||
+      typeof pinBody !== "string" ||
+      typeof category !== "string"
+    ) {
+      return NextResponse.json(
+        { error: "lat, lng, title, body, category are required" },
+        { status: 400 }
+      );
+    }
+
+    const pin = await db.pin.create({
+      data: {
+        lat,
+        lng,
+        title: title.trim(),
+        body: pinBody.trim(),
+        category,
+        authorId: user.id,
+      },
+      include: {
+        author: { select: { handle: true, avatarUrl: true } },
+      },
+    });
+
+    return NextResponse.json(pin, { status: 201 });
   } catch (err) {
-    return err as NextResponse;
-  }
-
-  const body = await req.json().catch(() => null);
-  if (!body) {
-    return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
-  }
-
-  const { lat, lng, title, body: pinBody, category } = body;
-
-  if (
-    typeof lat !== "number" ||
-    typeof lng !== "number" ||
-    typeof title !== "string" ||
-    typeof pinBody !== "string" ||
-    typeof category !== "string"
-  ) {
+    console.error("POST /api/pins error:", err);
     return NextResponse.json(
-      { error: "lat, lng, title, body, category are required" },
-      { status: 400 }
+      { error: err instanceof Error ? err.message : "Internal server error" },
+      { status: 500 }
     );
   }
-
-  const pin = await db.pin.create({
-    data: {
-      lat,
-      lng,
-      title: title.trim(),
-      body: pinBody.trim(),
-      category,
-      authorId: user.id,
-    },
-  });
-
-  return NextResponse.json(pin, { status: 201 });
 }

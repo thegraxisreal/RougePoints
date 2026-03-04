@@ -27,11 +27,9 @@ export async function GET(_req: NextRequest, { params }: Params) {
 // ─── DELETE /api/pins/[id] — requires auth, must be the author ───────────────
 
 export async function DELETE(_req: NextRequest, { params }: Params) {
-  let user;
-  try {
-    user = await requireUser();
-  } catch (err) {
-    return err as NextResponse;
+  const user = await requireUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id } = await params;
