@@ -37,21 +37,38 @@ function makePinIcon(color: string): L.DivIcon {
   });
 }
 
-function makeSpotIcon(): L.DivIcon {
-  const svg = `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+const SPOT_SVGS: Record<string, string> = {
+  school: `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="spot-shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <filter id="spot-shadow-school" x="-50%" y="-50%" width="200%" height="200%">
         <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#a78bfa" flood-opacity="0.7"/>
       </filter>
     </defs>
-    <rect x="4" y="6" width="32" height="28" rx="4" fill="#7c3aed" filter="url(#spot-shadow)"/>
+    <rect x="4" y="6" width="32" height="28" rx="4" fill="#7c3aed" filter="url(#spot-shadow-school)"/>
     <rect x="4" y="6" width="32" height="28" rx="4" stroke="#a78bfa" stroke-width="1.5" fill="none"/>
     <rect x="10" y="12" width="6" height="7" rx="1" fill="white" opacity="0.85"/>
     <rect x="24" y="12" width="6" height="7" rx="1" fill="white" opacity="0.85"/>
     <rect x="16" y="22" width="8" height="12" rx="1" fill="#fbbf24" opacity="0.9"/>
     <polygon points="2,10 20,0 38,10" fill="#8b5cf6"/>
     <polygon points="2,10 20,0 38,10" stroke="#a78bfa" stroke-width="1" fill="none"/>
-  </svg>`;
+  </svg>`,
+  park: `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="spot-shadow-park" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#4ade80" flood-opacity="0.6"/>
+      </filter>
+    </defs>
+    <ellipse cx="20" cy="16" rx="14" ry="13" fill="#16a34a" filter="url(#spot-shadow-park)"/>
+    <ellipse cx="20" cy="16" rx="14" ry="13" stroke="#4ade80" stroke-width="1.5" fill="none"/>
+    <ellipse cx="13" cy="18" rx="8" ry="7" fill="#15803d" opacity="0.7"/>
+    <ellipse cx="27" cy="18" rx="8" ry="7" fill="#15803d" opacity="0.7"/>
+    <rect x="17" y="28" width="6" height="10" rx="2" fill="#92400e"/>
+    <rect x="17" y="28" width="6" height="10" rx="2" stroke="#a16207" stroke-width="1" fill="none"/>
+  </svg>`,
+};
+
+function makeSpotIcon(type: string): L.DivIcon {
+  const svg = SPOT_SVGS[type] ?? SPOT_SVGS.school;
   return L.divIcon({
     html: svg,
     className: "",
@@ -217,7 +234,7 @@ function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void })
 
     for (const spot of spots) {
       if (markersRef.current.has(spot.id)) continue;
-      const marker = L.marker([spot.lat, spot.lng], { icon: makeSpotIcon() })
+      const marker = L.marker([spot.lat, spot.lng], { icon: makeSpotIcon(spot.type) })
         .addTo(map)
         .on("click", (e) => {
           L.DomEvent.stopPropagation(e);
