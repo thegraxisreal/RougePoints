@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_CODE = "1612";
+const ADMIN_CODE = process.env.ADMIN_CODE ?? "1612";
 
 // ─── POST /api/admin/verify — check admin code ──────────────────────────────
 
