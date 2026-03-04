@@ -202,10 +202,149 @@ body {
   user-select: none;
 }
 
+/* ── Hero bottom fade (theme-aware) ── */
+.hero-bottom-fade {
+  background: linear-gradient(to top, #0a0a0f, transparent);
+}
+[data-theme="light"] .hero-bottom-fade {
+  background: linear-gradient(to top, #f4f0e6, transparent);
+}
+
+/* ══════════════════════════════════════
+   LIGHT MODE OVERRIDES
+   ══════════════════════════════════════ */
+
+[data-theme="light"] {
+  --background: #f4f0e6;
+  --foreground: #1a1710;
+  color-scheme: light;
+}
+
+[data-theme="light"] body {
+  background: #f4f0e6;
+  color: #1a1710;
+}
+
+/* Flip white text utilities to dark equivalents */
+[data-theme="light"] .text-white\/90 { color: rgba(26,23,16,0.92) !important; }
+[data-theme="light"] .text-white\/85 { color: rgba(26,23,16,0.85) !important; }
+[data-theme="light"] .text-white\/75 { color: rgba(26,23,16,0.75) !important; }
+[data-theme="light"] .text-white\/70 { color: rgba(26,23,16,0.70) !important; }
+[data-theme="light"] .text-white\/65 { color: rgba(26,23,16,0.65) !important; }
+[data-theme="light"] .text-white\/60 { color: rgba(26,23,16,0.60) !important; }
+[data-theme="light"] .text-white\/55 { color: rgba(26,23,16,0.55) !important; }
+[data-theme="light"] .text-white\/50 { color: rgba(26,23,16,0.50) !important; }
+[data-theme="light"] .text-white\/45 { color: rgba(26,23,16,0.45) !important; }
+[data-theme="light"] .text-white\/40 { color: rgba(26,23,16,0.40) !important; }
+[data-theme="light"] .text-white\/35 { color: rgba(26,23,16,0.35) !important; }
+[data-theme="light"] .text-white\/30 { color: rgba(26,23,16,0.30) !important; }
+[data-theme="light"] .text-white\/25 { color: rgba(26,23,16,0.25) !important; }
+[data-theme="light"] .text-white\/20 { color: rgba(26,23,16,0.20) !important; }
+[data-theme="light"] .text-white\/15 { color: rgba(26,23,16,0.15) !important; }
+[data-theme="light"] .text-white\/10 { color: rgba(26,23,16,0.10) !important; }
+[data-theme="light"] .text-white { color: #1a1710 !important; }
+
+/* Flip white bg utilities to subtle dark tints */
+[data-theme="light"] .bg-white\/\[0\.02\] { background-color: rgba(26,23,16,0.04) !important; }
+[data-theme="light"] .bg-white\/\[0\.04\] { background-color: rgba(26,23,16,0.06) !important; }
+[data-theme="light"] .bg-white\/5      { background-color: rgba(26,23,16,0.06) !important; }
+[data-theme="light"] .bg-white\/10     { background-color: rgba(26,23,16,0.08) !important; }
+
+/* Flip white border utilities */
+[data-theme="light"] .border-white\/\[0\.06\] { border-color: rgba(26,23,16,0.10) !important; }
+[data-theme="light"] .border-white\/\[0\.08\] { border-color: rgba(26,23,16,0.12) !important; }
+[data-theme="light"] .border-white\/10        { border-color: rgba(26,23,16,0.12) !important; }
+
+/* Glass / backdrop effects */
+[data-theme="light"] .glass {
+  background: rgba(244, 240, 230, 0.85) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(26, 23, 16, 0.10) !important;
+}
+[data-theme="light"] .glass-light {
+  background: rgba(26, 23, 16, 0.04) !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(26, 23, 16, 0.07) !important;
+}
+
+/* Vignette for hero map */
+[data-theme="light"] .vignette {
+  background: radial-gradient(
+    ellipse 80% 70% at 50% 50%,
+    transparent 20%,
+    rgba(244, 240, 230, 0.55) 60%,
+    rgba(244, 240, 230, 0.92) 100%
+  );
+}
+
+/* Ambient glow BG */
+[data-theme="light"] .ambient-glow::after {
+  background: radial-gradient(
+    ellipse 50% 40% at 50% 0%,
+    rgba(251, 191, 36, 0.06) 0%,
+    transparent 70%
+  );
+}
+
+/* Section headings */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3 {
+  color: #1a1710;
+}
+
+/* Nav header: light frosted glass */
+[data-theme="light"] header {
+  background: transparent;
+}
+
+/* Footer border */
+[data-theme="light"] footer {
+  border-top-color: rgba(26,23,16,0.10);
+}
+
+/* ThemeToggle button in light mode */
+[data-theme="light"] .theme-toggle-btn {
+  border-color: rgba(26,23,16,0.12);
+  background: rgba(26,23,16,0.04);
+  color: rgba(26,23,16,0.5);
+}
+
 /* ── Leaflet dark-theme overrides ── */
 .leaflet-container {
   background: #0a0a0f;
   font-family: var(--font-body);
+}
+
+[data-theme="light"] .leaflet-container {
+  background: #f4f0e6;
+}
+
+[data-theme="light"] .leaflet-popup-content-wrapper {
+  background: rgba(244, 240, 230, 0.97);
+  color: #1a1710;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+[data-theme="light"] .leaflet-popup-tip-container .leaflet-popup-tip {
+  background: rgba(244, 240, 230, 0.97);
+}
+[data-theme="light"] .leaflet-control-zoom a {
+  background-color: rgba(244, 240, 230, 0.92) !important;
+  color: rgba(26, 23, 16, 0.7) !important;
+  border-color: rgba(26, 23, 16, 0.12) !important;
+}
+[data-theme="light"] .leaflet-control-zoom a:hover {
+  background-color: rgba(244, 240, 230, 1) !important;
+  color: var(--amber) !important;
+}
+[data-theme="light"] .leaflet-control-attribution {
+  background: rgba(255, 255, 255, 0.7) !important;
+  color: rgba(26, 23, 16, 0.5) !important;
+}
+[data-theme="light"] .leaflet-control-attribution a {
+  color: rgba(26, 23, 16, 0.6) !important;
 }
 
 .leaflet-popup-content-wrapper {

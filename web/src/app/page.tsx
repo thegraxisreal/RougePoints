@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import { useEffect } from "react";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 /* Leaflet must be client-only (no SSR) */
 const LandingMap = dynamic(
@@ -380,6 +381,7 @@ export default function Home() {
               >
                 Features
               </a>
+              <ThemeToggle />
               <a href="/request-access" className="inline-flex items-center rounded-full bg-amber-400 px-5 py-2 text-sm font-semibold text-black hover:bg-amber-300 active:scale-[.97] transition glow-amber-sm cursor-pin">
                 Sign In
               </a>
@@ -403,7 +405,7 @@ export default function Home() {
           {/* Vignette overlay — inside same stacking context so card (z-20) renders above it */}
           <div className="absolute inset-0 z-10 vignette pointer-events-none" />
           {/* Extra bottom fade */}
-          <div className="absolute inset-x-0 bottom-0 z-10 h-40 bg-gradient-to-t from-[#0a0a0f] to-transparent pointer-events-none" />
+          <div className="absolute inset-x-0 bottom-0 z-10 h-40 hero-bottom-fade pointer-events-none" />
         </div>
 
         {/* Content overlay */}
