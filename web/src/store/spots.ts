@@ -13,12 +13,14 @@ export type Spot = {
 type SpotsStore = {
   // Admin
   isAdmin: boolean;
-  setAdmin: (on: boolean) => void;
+  adminCode: string;
+  setAdmin: (on: boolean, code?: string) => void;
 
   // Spots on the map
   spots: Spot[];
   setSpots: (spots: Spot[]) => void;
   addSpot: (spot: Spot) => void;
+  removeSpot: (id: string) => void;
 
   // Spot drop mode (admin placing a spot)
   spotDropMode: boolean;
@@ -38,11 +40,13 @@ type SpotsStore = {
 
 export const useSpotsStore = create<SpotsStore>((set) => ({
   isAdmin: false,
-  setAdmin: (isAdmin) => set({ isAdmin }),
+  adminCode: "",
+  setAdmin: (isAdmin, code) => set({ isAdmin, ...(code !== undefined ? { adminCode: code } : {}) }),
 
   spots: [],
   setSpots: (spots) => set({ spots }),
   addSpot: (spot) => set((s) => ({ spots: [spot, ...s.spots] })),
+  removeSpot: (id) => set((s) => ({ spots: s.spots.filter((sp) => sp.id !== id) })),
 
   spotDropMode: false,
   setSpotDropMode: (spotDropMode) => set({ spotDropMode }),

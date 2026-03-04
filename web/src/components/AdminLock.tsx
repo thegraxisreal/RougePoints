@@ -24,7 +24,7 @@ export function AdminLock() {
         setError(true);
         return;
       }
-      setAdmin(true);
+      setAdmin(true, code);
       setShowDialog(false);
       setCode("");
     } finally {
