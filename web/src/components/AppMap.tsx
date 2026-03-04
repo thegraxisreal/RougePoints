@@ -39,7 +39,7 @@ function makePinIcon(color: string): L.DivIcon {
 // Fetches pins from the API whenever the map viewport changes
 function PinFetcher() {
   const map = useMap();
-  const fetchRef = useRef<ReturnType<typeof setTimeout>>();
+  const fetchRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     function fetchPins() {
