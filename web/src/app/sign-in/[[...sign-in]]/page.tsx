@@ -1,6 +1,8 @@
 import { SignIn } from "@clerk/nextjs";
+import { dark as clerkDark } from "@clerk/themes";
 
-const dark = {
+const appearance = {
+  baseTheme: clerkDark,
   variables: {
     colorBackground: "#13131a",
     colorInputBackground: "#1a1a26",
@@ -11,12 +13,13 @@ const dark = {
     colorPrimary: "#fbbf24",
     colorDanger: "#f87171",
     colorSuccess: "#34d399",
-    colorNeutral: "#ffffff",
+    colorNeutral: "#8b8fa8",
     borderRadius: "12px",
     fontFamily: "DM Sans, system-ui, sans-serif",
     fontSize: "14px",
   },
   elements: {
+    rootBox: { width: "100%" },
     card: {
       background: "#13131a",
       border: "1px solid rgba(255,255,255,0.08)",
@@ -64,7 +67,7 @@ const dark = {
 export default function SignInPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#0a0a0f]">
-      <SignIn appearance={dark} />
+      <SignIn appearance={appearance} />
     </main>
   );
 }
