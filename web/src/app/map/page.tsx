@@ -3,8 +3,12 @@
 import dynamic from "next/dynamic";
 import { UserButton } from "@clerk/nextjs";
 import { usePinsStore, Pin } from "@/store/pins";
+import { useSpotsStore, Spot } from "@/store/spots";
 import { ComposeModal } from "@/components/ComposeModal";
 import { PinDetail } from "@/components/PinDetail";
+import { AdminLock } from "@/components/AdminLock";
+import { SpotCompose } from "@/components/SpotCompose";
+import { SpotView } from "@/components/SpotView";
 import { useCallback } from "react";
 
 const AppMap = dynamic(
@@ -14,16 +18,22 @@ const AppMap = dynamic(
 
 export default function MapPage() {
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
+  const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
 
   const handlePinClick = useCallback(
     (pin: Pin) => selectPin(pin),
     [selectPin]
   );
 
+  const handleSpotClick = useCallback(
+    (spot: Spot) => selectSpot(spot),
+    [selectSpot]
+  );
+
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#0a0a0f]">
       {/* Full-screen map */}
-      <AppMap onPinClick={handlePinClick} />
+      <AppMap onPinClick={handlePinClick} onSpotClick={handleSpotClick} />
 
       {/* ── Floating header ── */}
       <header className="pointer-events-none absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 sm:px-6">
@@ -111,8 +121,26 @@ export default function MapPage() {
         </div>
       )}
 
+      {/* ── Spot drop mode banner ── */}
+      {spotDropMode && !spotComposeOpen && (
+        <div className="pointer-events-none absolute top-20 left-1/2 z-20 -translate-x-1/2">
+          <div className="flex items-center gap-2 rounded-full border border-purple-400/30 bg-black/70 backdrop-blur-md px-5 py-2 text-sm text-purple-300">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path d="M9.674 2.075a.75.75 0 0 1 .652 0l7.25 3.5A.75.75 0 0 1 17.5 7v.005a.75.75 0 0 1-.076.337l-.002.003-.002.004A.75.75 0 0 1 17 7.75h-.25v4.505a.75.75 0 0 1-.154.46L10.324 17.9a.75.75 0 0 1-1.148 0L2.904 12.715a.75.75 0 0 1-.154-.46V7.75H2.5a.75.75 0 0 1-.326-1.425l7.25-3.5ZM4.25 7.75v4.192l5.75 4.457 5.75-4.457V7.75H4.25Z" />
+            </svg>
+            Tap anywhere on the map to place a spot
+            <button
+              className="pointer-events-auto ml-2 text-white/40 hover:text-white transition"
+              onClick={() => useSpotsStore.getState().setSpotDropMode(false)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ── FAB — Drop Story ── */}
-      {!composeOpen && (
+      {!composeOpen && !spotComposeOpen && (
         <button
           onClick={() => setDropMode(!dropMode)}
           className={`absolute bottom-8 right-6 z-20 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl transition-all active:scale-95 ${
@@ -133,9 +161,14 @@ export default function MapPage() {
         </button>
       )}
 
+      {/* ── Admin lock (bottom-left) ── */}
+      <AdminLock />
+
       {/* ── Overlays ── */}
       <ComposeModal />
+      <SpotCompose />
       <PinDetail />
+      <SpotView />
     </div>
   );
 }
