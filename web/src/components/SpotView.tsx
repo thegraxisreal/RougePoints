@@ -1,5 +1,5 @@
 "use client";
-
+// v2
 import { useEffect, useState } from "react";
 import { useSpotsStore } from "@/store/spots";
 import type { Pin } from "@/store/pins";
