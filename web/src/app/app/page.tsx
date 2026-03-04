@@ -14,9 +14,9 @@ export default function AppPage() {
       <Map />
 
       {/* Floating nav bar */}
-      <header className="absolute top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
-          <svg aria-hidden="true" viewBox="0 0 32 32" className="h-7 w-7">
+      <header className="absolute top-0 left-0 right-0 z-[1000] flex items-center justify-between px-4 py-3 pointer-events-none">
+        <div className="flex items-center gap-2 pointer-events-auto">
+          <svg aria-hidden="true" viewBox="0 0 32 32" className="h-7 w-7 drop-shadow-lg">
             <defs>
               <linearGradient id="rgp-g" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0" stopColor="#fbbf24" />
@@ -36,6 +36,7 @@ export default function AppPage() {
           </span>
         </div>
 
+        <div className="pointer-events-auto">
         <UserButton
           appearance={{
             variables: { colorPrimary: "#fbbf24" },
@@ -44,6 +45,7 @@ export default function AppPage() {
             },
           }}
         />
+        </div>
       </header>
     </div>
   );
