@@ -8,6 +8,7 @@ export type Spot = {
   lng: number;
   type: string;
   createdAt: string;
+  _count?: { pins: number };
 };
 
 type SpotsStore = {

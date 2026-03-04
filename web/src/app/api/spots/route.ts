@@ -32,6 +32,7 @@ export async function GET(req: NextRequest) {
       lng: true,
       type: true,
       createdAt: true,
+      _count: { select: { pins: true } },
     },
     orderBy: { createdAt: "desc" },
     take: 200,
