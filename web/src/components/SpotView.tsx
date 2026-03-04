@@ -170,7 +170,7 @@ export function SpotView() {
         )}
       </div>
 
-      {/* Add story FAB */}
+      {/* Add pin FAB */}
       {!composeOpen && (
         <button
           onClick={() => setComposeOpen(true)}
@@ -180,7 +180,7 @@ export function SpotView() {
           <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
             <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-11.25a.75.75 0 0 0-1.5 0v2.5h-2.5a.75.75 0 0 0 0 1.5h2.5v2.5a.75.75 0 0 0 1.5 0v-2.5h2.5a.75.75 0 0 0 0-1.5h-2.5v-2.5Z" clipRule="evenodd" />
           </svg>
-          Add Story
+          Add Pin
         </button>
       )}
 
@@ -189,7 +189,7 @@ export function SpotView() {
         <div className="border-t border-white/[0.06] px-5 py-5 sm:px-8 bg-[#13131a]">
           <form onSubmit={handleSubmitPin} className="max-w-lg mx-auto flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-display text-base text-white">New Story</h3>
+              <h3 className="font-display text-base text-white">New Pin</h3>
               <button
                 type="button"
                 onClick={() => { setComposeOpen(false); setError(null); }}
@@ -243,7 +243,7 @@ export function SpotView() {
               disabled={submitting || !title.trim() || !body.trim()}
               className="rounded-xl bg-amber-400 py-2.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
-              {submitting ? "Dropping..." : "Drop Story"}
+              {submitting ? "Dropping..." : "Drop Pin"}
             </button>
           </form>
         </div>
