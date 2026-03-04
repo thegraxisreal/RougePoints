@@ -64,9 +64,28 @@ model Pin {
   laughCount Int @default(0)
   wowCount   Int @default(0)
 
+  // Optional link to a Spot (pin is "inside" this spot)
+  spot      Spot?    @relation(fields: [spotId], references: [id])
+  spotId    String?
+
   media     Media[]
   reactions Reaction[]
   reports   Report[]
+}
+
+// ─── Spot ──────────────────────────────────────────────────────────────────────
+// Admin-only landmark (school, park, etc.) that contains its own pins.
+
+model Spot {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+
+  name      String
+  lat       Float
+  lng       Float
+  type      String   @default("school") // "school" | future types
+
+  pins      Pin[]
 }
 
 // ─── Media ────────────────────────────────────────────────────────────────────

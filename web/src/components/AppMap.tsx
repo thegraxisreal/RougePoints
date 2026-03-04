@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { usePinsStore, Pin } from "@/store/pins";
+import { useSpotsStore, Spot } from "@/store/spots";
 import { useViewportStore } from "@/store/viewport";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -33,6 +34,29 @@ function makePinIcon(color: string): L.DivIcon {
     className: "",
     iconSize: [30, 38],
     iconAnchor: [15, 38],
+  });
+}
+
+function makeSpotIcon(): L.DivIcon {
+  const svg = `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="spot-shadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="2" stdDeviation="4" flood-color="#a78bfa" flood-opacity="0.7"/>
+      </filter>
+    </defs>
+    <rect x="4" y="6" width="32" height="28" rx="4" fill="#7c3aed" filter="url(#spot-shadow)"/>
+    <rect x="4" y="6" width="32" height="28" rx="4" stroke="#a78bfa" stroke-width="1.5" fill="none"/>
+    <rect x="10" y="12" width="6" height="7" rx="1" fill="white" opacity="0.85"/>
+    <rect x="24" y="12" width="6" height="7" rx="1" fill="white" opacity="0.85"/>
+    <rect x="16" y="22" width="8" height="12" rx="1" fill="#fbbf24" opacity="0.9"/>
+    <polygon points="2,10 20,0 38,10" fill="#8b5cf6"/>
+    <polygon points="2,10 20,0 38,10" stroke="#a78bfa" stroke-width="1" fill="none"/>
+  </svg>`;
+  return L.divIcon({
+    html: svg,
+    className: "",
+    iconSize: [40, 44],
+    iconAnchor: [20, 44],
   });
 }
 
@@ -74,12 +98,53 @@ function PinFetcher() {
   return null;
 }
 
+// Fetches spots from the API whenever the map viewport changes
+function SpotFetcher() {
+  const map = useMap();
+  const fetchRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+
+  useEffect(() => {
+    function fetchSpots() {
+      const bounds = map.getBounds();
+      const params = new URLSearchParams({
+        swLat: String(bounds.getSouth()),
+        swLng: String(bounds.getWest()),
+        neLat: String(bounds.getNorth()),
+        neLng: String(bounds.getEast()),
+      });
+      fetch(`/api/spots?${params}`)
+        .then((r) => (r.ok ? r.json() : []))
+        .then((spots) => useSpotsStore.getState().setSpots(spots))
+        .catch(() => {});
+    }
+
+    map.whenReady(fetchSpots);
+
+    function onMoveEnd() {
+      clearTimeout(fetchRef.current);
+      fetchRef.current = setTimeout(fetchSpots, 300);
+    }
+    map.on("moveend", onMoveEnd);
+    return () => {
+      map.off("moveend", onMoveEnd);
+      clearTimeout(fetchRef.current);
+    };
+  }, [map]);
+
+  return null;
+}
+
 // Handles map clicks in drop mode — reads store directly to avoid stale closures
 function MapClickHandler() {
   useMapEvents({
     click(e) {
       const { dropMode, openCompose } = usePinsStore.getState();
-      if (dropMode) openCompose({ lat: e.latlng.lat, lng: e.latlng.lng });
+      const { spotDropMode, openSpotCompose } = useSpotsStore.getState();
+      if (spotDropMode) {
+        openSpotCompose({ lat: e.latlng.lat, lng: e.latlng.lng });
+      } else if (dropMode) {
+        openCompose({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
     },
   });
   return null;
@@ -89,9 +154,10 @@ function MapClickHandler() {
 function CursorEffect() {
   const map = useMap();
   const { dropMode } = usePinsStore();
+  const { spotDropMode } = useSpotsStore();
   useEffect(() => {
-    map.getContainer().style.cursor = dropMode ? "crosshair" : "";
-  }, [map, dropMode]);
+    map.getContainer().style.cursor = dropMode || spotDropMode ? "crosshair" : "";
+  }, [map, dropMode, spotDropMode]);
   return null;
 }
 
@@ -131,11 +197,45 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   return null;
 }
 
+// Renders spot markers with a custom building SVG
+function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void }) {
+  const map = useMap();
+  const { spots } = useSpotsStore();
+  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const onSpotClickRef = useRef(onSpotClick);
+  onSpotClickRef.current = onSpotClick;
+
+  useEffect(() => {
+    const currentIds = new Set(spots.map((s) => s.id));
+
+    for (const [id, marker] of markersRef.current) {
+      if (!currentIds.has(id)) {
+        marker.remove();
+        markersRef.current.delete(id);
+      }
+    }
+
+    for (const spot of spots) {
+      if (markersRef.current.has(spot.id)) continue;
+      const marker = L.marker([spot.lat, spot.lng], { icon: makeSpotIcon() })
+        .addTo(map)
+        .on("click", (e) => {
+          L.DomEvent.stopPropagation(e);
+          onSpotClickRef.current(spot);
+        });
+      markersRef.current.set(spot.id, marker);
+    }
+  }, [spots, map]);
+
+  return null;
+}
+
 type Props = {
   onPinClick: (pin: Pin) => void;
+  onSpotClick: (spot: Spot) => void;
 };
 
-export function AppMap({ onPinClick }: Props) {
+export function AppMap({ onPinClick, onSpotClick }: Props) {
   const { latitude, longitude, zoom } = useViewportStore();
 
   return (
@@ -153,9 +253,11 @@ export function AppMap({ onPinClick }: Props) {
         maxZoom={20}
       />
       <PinFetcher />
+      <SpotFetcher />
       <MapClickHandler />
       <CursorEffect />
       <MarkerLayer onPinClick={onPinClick} />
+      <SpotMarkerLayer onSpotClick={onSpotClick} />
     </MapContainer>
   );
 }
