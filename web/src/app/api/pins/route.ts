@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
   const pins = await db.pin.findMany({
     where: {
       status: "visible",
+      spotId: null,
       lat: { gte: swLat, lte: neLat },
       lng: { gte: swLng, lte: neLng },
     },

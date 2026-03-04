@@ -9,7 +9,7 @@ import { PinDetail } from "@/components/PinDetail";
 import { AdminLock } from "@/components/AdminLock";
 import { SpotCompose } from "@/components/SpotCompose";
 import { SpotView } from "@/components/SpotView";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 const AppMap = dynamic(
   () => import("@/components/AppMap").then((m) => m.AppMap),
@@ -17,6 +17,7 @@ const AppMap = dynamic(
 );
 
 export default function MapPage() {
+  const [lightMode, setLightMode] = useState(false);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
 
@@ -33,7 +34,7 @@ export default function MapPage() {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#0a0a0f]">
       {/* Full-screen map */}
-      <AppMap onPinClick={handlePinClick} onSpotClick={handleSpotClick} />
+      <AppMap onPinClick={handlePinClick} onSpotClick={handleSpotClick} lightMode={lightMode} />
 
       {/* ── Floating header ── */}
       <header className="pointer-events-none absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 sm:px-6">
@@ -56,6 +57,27 @@ export default function MapPage() {
           </svg>
           <span className="font-display text-base italic text-white/80">RoguePoints</span>
         </a>
+
+        {/* Light mode toggle */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          <button
+            onClick={() => setLightMode((v) => !v)}
+            title={lightMode ? "Switch to dark map" : "Switch to light map"}
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md text-white/70 hover:text-white hover:bg-black/70 transition"
+          >
+            {lightMode ? (
+              /* Moon icon */
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path fillRule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clipRule="evenodd"/>
+              </svg>
+            ) : (
+              /* Sun icon */
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06L5.404 4.343a.75.75 0 1 0-1.06 1.06l1.06 1.061Z"/>
+              </svg>
+            )}
+          </button>
+        </div>
 
         {/* User avatar */}
         <div className="pointer-events-auto rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md p-0.5">

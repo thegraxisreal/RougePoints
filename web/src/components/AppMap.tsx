@@ -67,10 +67,13 @@ const SPOT_SVGS: Record<string, string> = {
   </svg>`,
 };
 
-function makeSpotIcon(type: string): L.DivIcon {
+function makeSpotIcon(type: string, hasPins: boolean = false): L.DivIcon {
   const svg = SPOT_SVGS[type] ?? SPOT_SVGS.school;
+  const dot = hasPins
+    ? `<div style="position:absolute;top:-3px;right:-3px;width:11px;height:11px;background:#f87171;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(248,113,113,0.7)"></div>`
+    : "";
   return L.divIcon({
-    html: svg,
+    html: `<div style="position:relative;display:inline-block;width:40px;height:44px">${svg}${dot}</div>`,
     className: "",
     iconSize: [40, 44],
     iconAnchor: [20, 44],
@@ -214,18 +217,18 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   return null;
 }
 
-// Renders spot markers with a custom building SVG
+// Renders spot markers with a custom building SVG and a dot if the spot has stories
 function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void }) {
   const map = useMap();
   const { spots } = useSpotsStore();
-  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const markersRef = useRef<Map<string, { marker: L.Marker; pinCount: number }>>(new Map());
   const onSpotClickRef = useRef(onSpotClick);
   onSpotClickRef.current = onSpotClick;
 
   useEffect(() => {
     const currentIds = new Set(spots.map((s) => s.id));
 
-    for (const [id, marker] of markersRef.current) {
+    for (const [id, { marker }] of markersRef.current) {
       if (!currentIds.has(id)) {
         marker.remove();
         markersRef.current.delete(id);
@@ -233,14 +236,27 @@ function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void })
     }
 
     for (const spot of spots) {
-      if (markersRef.current.has(spot.id)) continue;
-      const marker = L.marker([spot.lat, spot.lng], { icon: makeSpotIcon(spot.type) })
+      const pinCount = spot._count?.pins ?? 0;
+      const existing = markersRef.current.get(spot.id);
+
+      // Skip if marker already exists with the same pin count
+      if (existing && existing.pinCount === pinCount) continue;
+
+      // Remove outdated marker so we can replace it
+      if (existing) {
+        existing.marker.remove();
+        markersRef.current.delete(spot.id);
+      }
+
+      const marker = L.marker([spot.lat, spot.lng], {
+        icon: makeSpotIcon(spot.type, pinCount > 0),
+      })
         .addTo(map)
         .on("click", (e) => {
           L.DomEvent.stopPropagation(e);
           onSpotClickRef.current(spot);
         });
-      markersRef.current.set(spot.id, marker);
+      markersRef.current.set(spot.id, { marker, pinCount });
     }
   }, [spots, map]);
 
@@ -250,31 +266,41 @@ function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void })
 type Props = {
   onPinClick: (pin: Pin) => void;
   onSpotClick: (spot: Spot) => void;
+  lightMode?: boolean;
 };
 
-export function AppMap({ onPinClick, onSpotClick }: Props) {
+export function AppMap({ onPinClick, onSpotClick, lightMode = false }: Props) {
   const { latitude, longitude, zoom } = useViewportStore();
 
+  const tileUrl = lightMode
+    ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+  const bgColor = lightMode ? "#f0ede8" : "#0a0a0f";
+
   return (
-    <MapContainer
-      center={[latitude, longitude]}
-      zoom={zoom}
-      zoomControl={false}
-      attributionControl={false}
-      className="h-full w-full"
-      style={{ background: "#0a0a0f" }}
-    >
-      <TileLayer
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={20}
-      />
-      <PinFetcher />
-      <SpotFetcher />
-      <MapClickHandler />
-      <CursorEffect />
-      <MarkerLayer onPinClick={onPinClick} />
-      <SpotMarkerLayer onSpotClick={onSpotClick} />
-    </MapContainer>
+    <div className={lightMode ? "map-light h-full w-full" : "map-dark h-full w-full"}>
+      <MapContainer
+        center={[latitude, longitude]}
+        zoom={zoom}
+        zoomControl={false}
+        attributionControl={false}
+        className="h-full w-full"
+        style={{ background: bgColor }}
+      >
+        <TileLayer
+          key={tileUrl}
+          url={tileUrl}
+          subdomains="abcd"
+          maxZoom={20}
+        />
+        <PinFetcher />
+        <SpotFetcher />
+        <MapClickHandler />
+        <CursorEffect />
+        <MarkerLayer onPinClick={onPinClick} />
+        <SpotMarkerLayer onSpotClick={onSpotClick} />
+      </MapContainer>
+    </div>
   );
 }
