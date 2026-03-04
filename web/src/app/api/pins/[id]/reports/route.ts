@@ -12,11 +12,9 @@ const HIDE_THRESHOLD = 3;
 // Auto-hides pin when report count hits threshold.
 
 export async function POST(req: NextRequest, { params }: Params) {
-  let user;
-  try {
-    user = await requireUser();
-  } catch (err) {
-    return err as NextResponse;
+  const user = await requireUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { id: pinId } = await params;

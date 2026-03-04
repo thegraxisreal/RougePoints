@@ -34,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider afterSignInUrl="/map" afterSignUpUrl="/map">
       <html lang="en" className="scroll-smooth" style={{ colorScheme: "dark" }}>
         <body
           className={`${instrumentSerif.variable} ${dmSans.variable} bg-[#0a0a0f] text-white antialiased selection:bg-amber-400/20 selection:text-amber-100`}

@@ -1,16 +1,13 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
 import { db } from "./db";
 
 /**
  * Returns the signed-in user's DB record, creating it on first login.
- * Throws a 401 NextResponse if the user is not authenticated.
+ * Returns null if the user is not authenticated.
  */
 export async function requireUser() {
   const { userId } = await auth();
-  if (!userId) {
-    throw NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  if (!userId) return null;
 
   const clerkUser = await currentUser();
 
@@ -37,7 +34,6 @@ async function uniqueHandle(base: string): Promise<string> {
   const existing = await db.user.findUnique({ where: { handle: slug } });
   if (!existing) return slug;
 
-  // Append random suffix
   const suffix = Math.floor(Math.random() * 9000) + 1000;
   return `${slug}${suffix}`;
 }
