@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Routes that require the user to be signed in
 const isProtectedRoute = createRouteMatcher([
+  "/app(.*)",
   "/dashboard(.*)",
   "/profile(.*)",
 ]);

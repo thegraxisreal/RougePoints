@@ -107,6 +107,7 @@ export default function RequestAccess() {
         {/* Clerk sign-in */}
         <SignIn
           routing="hash"
+          fallbackRedirectUrl="/app"
           appearance={{
             variables: {
               colorBackground: "#0d0d14",
