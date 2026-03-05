@@ -17,7 +17,7 @@ const AppMap = dynamic(
 );
 
 export default function MapPage() {
-  const [lightMode, setLightMode] = useState(false);
+  const [lightMode, setLightMode] = useState(true);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
 
