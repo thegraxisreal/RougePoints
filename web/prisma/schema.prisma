@@ -34,6 +34,7 @@ model User {
   pins      Pin[]
   reactions Reaction[]
   reports   Report[]   @relation("ReportedBy")
+  comments  Comment[]
 }
 
 // ─── Pin ──────────────────────────────────────────────────────────────────────
@@ -70,6 +71,7 @@ model Pin {
   media     Media[]
   reactions Reaction[]
   reports   Report[]
+  comments  Comment[]
 }
 
 // ─── Spot ──────────────────────────────────────────────────────────────────────
@@ -121,6 +123,22 @@ model Reaction {
   kind      String   // ReactionKind
 
   @@unique([userId, pinId, kind])
+}
+
+// ─── Comment ──────────────────────────────────────────────────────────────────
+
+model Comment {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  pin       Pin      @relation(fields: [pinId], references: [id], onDelete: Cascade)
+  pinId     String
+
+  author    User     @relation(fields: [authorId], references: [id])
+  authorId  String
+
+  text      String
 }
 
 // ─── Report ───────────────────────────────────────────────────────────────────
