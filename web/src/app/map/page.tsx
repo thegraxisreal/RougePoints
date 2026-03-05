@@ -91,10 +91,10 @@ export default function MapPage() {
           <div className="relative">
             {/* Hint bubble — visible until satellite mode is activated */}
             {!satelliteMode && (
-              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[160px] rounded-lg bg-black/80 px-2.5 py-1.5 text-center text-[10px] leading-snug text-white backdrop-blur-sm border border-white/10 shadow-lg">
-                press this for a real camera view
-                {/* arrow */}
-                <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-black/80" />
+              <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-3 w-max max-w-[180px] rounded-xl bg-white/95 px-3 py-2 text-center text-[11px] font-medium leading-snug text-gray-800 shadow-xl border border-white/60 backdrop-blur-sm">
+                {/* arrow pointing up at button */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-white/95" />
+                🛰️ press this for a real camera view
               </div>
             )}
             <button
