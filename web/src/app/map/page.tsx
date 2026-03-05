@@ -88,20 +88,30 @@ export default function MapPage() {
           <div className="h-4 w-px bg-white/10" />
 
           {/* Satellite toggle */}
-          <button
-            onClick={() => setSatelliteMode((v) => !v)}
-            title={satelliteMode ? "Switch to street map" : "Switch to satellite"}
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
-              satelliteMode
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "text-white/70 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            {/* Globe / satellite icon */}
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.164 13.164 0 0 0-2.413-5.773 8.117 8.117 0 0 0-1.826 0 13.164 13.164 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM14.8 9.167a9.983 9.983 0 0 1-3.726 1.07 14.88 14.88 0 0 1 .676 4.608 8.017 8.017 0 0 0 3.274-4.166 8.095 8.095 0 0 0-.223-1.512ZM10 18a7.985 7.985 0 0 0 1.088-.076 13.36 13.36 0 0 0-.677-4.68A8.467 8.467 0 0 0 10 13.5a8.467 8.467 0 0 0-.411-.256 13.36 13.36 0 0 0-.677 4.68A7.984 7.984 0 0 0 10 18ZM5.2 9.167a8.095 8.095 0 0 0-.224 1.512 8.017 8.017 0 0 0 3.275 4.166 14.88 14.88 0 0 1 .675-4.607A9.983 9.983 0 0 1 5.2 9.167ZM6.948 2.602a8.028 8.028 0 0 0-3.503 2.81 8.547 8.547 0 0 0 1.84 1.662 14.899 14.899 0 0 1 1.663-4.472Z"/>
-            </svg>
-          </button>
+          <div className="relative">
+            {/* Hint bubble — visible until satellite mode is activated */}
+            {!satelliteMode && (
+              <div className="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-max max-w-[160px] rounded-lg bg-black/80 px-2.5 py-1.5 text-center text-[10px] leading-snug text-white backdrop-blur-sm border border-white/10 shadow-lg">
+                press this for a real camera view
+                {/* arrow */}
+                <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-black/80" />
+              </div>
+            )}
+            <button
+              onClick={() => setSatelliteMode((v) => !v)}
+              title={satelliteMode ? "Switch to street map" : "Switch to satellite"}
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
+                satelliteMode
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {/* Globe / satellite icon */}
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.164 13.164 0 0 0-2.413-5.773 8.117 8.117 0 0 0-1.826 0 13.164 13.164 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM14.8 9.167a9.983 9.983 0 0 1-3.726 1.07 14.88 14.88 0 0 1 .676 4.608 8.017 8.017 0 0 0 3.274-4.166 8.095 8.095 0 0 0-.223-1.512ZM10 18a7.985 7.985 0 0 0 1.088-.076 13.36 13.36 0 0 0-.677-4.68A8.467 8.467 0 0 0 10 13.5a8.467 8.467 0 0 0-.411-.256 13.36 13.36 0 0 0-.677 4.68A7.984 7.984 0 0 0 10 18ZM5.2 9.167a8.095 8.095 0 0 0-.224 1.512 8.017 8.017 0 0 0 3.275 4.166 14.88 14.88 0 0 1 .675-4.607A9.983 9.983 0 0 1 5.2 9.167ZM6.948 2.602a8.028 8.028 0 0 0-3.503 2.81 8.547 8.547 0 0 0 1.84 1.662 14.899 14.899 0 0 1 1.663-4.472Z"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* User avatar */}
