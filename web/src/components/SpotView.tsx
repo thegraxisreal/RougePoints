@@ -44,9 +44,6 @@ function PinCard({ pin }: { pin: Pin }) {
         <span className="text-[10px] text-white/25">{timeAgo(pin.createdAt)}</span>
       </div>
       <h4 className="text-sm font-semibold text-white mb-1">{pin.title}</h4>
-      <p className="text-sm text-white/50 italic font-display leading-relaxed">
-        &ldquo;{pin.body}&rdquo;
-      </p>
       <div className="flex items-center gap-2 mt-3">
         {pin.author?.avatarUrl ? (
           <img
@@ -73,7 +70,6 @@ export function SpotView() {
   const [deleting, setDeleting] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const [category, setCategory] = useState("funny");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -93,7 +89,7 @@ export function SpotView() {
 
   async function handleSubmitPin(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !body.trim() || !selectedSpot) return;
+    if (!title.trim() || !selectedSpot) return;
     setSubmitting(true);
     setError(null);
     try {
@@ -102,7 +98,6 @@ export function SpotView() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title: title.trim(),
-          body: body.trim(),
           category,
         }),
       });
@@ -113,7 +108,6 @@ export function SpotView() {
       const pin = await res.json();
       addSpotPin(pin);
       setTitle("");
-      setBody("");
       setCategory("funny");
       setComposeOpen(false);
     } catch (err) {
@@ -260,21 +254,12 @@ export function SpotView() {
               required
               className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-amber-400/40 focus:ring-1 focus:ring-amber-400/20 transition"
             />
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value.slice(0, 280))}
-              placeholder="Tell your story... (max 280)"
-              maxLength={280}
-              rows={3}
-              required
-              className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2 text-sm text-white placeholder-white/20 outline-none focus:border-amber-400/40 focus:ring-1 focus:ring-amber-400/20 transition"
-            />
             {error && (
               <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>
             )}
             <button
               type="submit"
-              disabled={submitting || !title.trim() || !body.trim()}
+              disabled={submitting || !title.trim()}
               className="rounded-xl bg-amber-400 py-2.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               {submitting ? "Dropping..." : "Drop Pin"}

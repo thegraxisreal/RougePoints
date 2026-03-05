@@ -21,7 +21,6 @@ export async function GET(_req: NextRequest, { params }: Params) {
       lat: true,
       lng: true,
       title: true,
-      body: true,
       category: true,
       authorId: true,
       fireCount: true,
@@ -58,14 +57,13 @@ export async function POST(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const { title, body: pinBody, category } = body;
+  const { title, category } = body;
   if (
     typeof title !== "string" ||
-    typeof pinBody !== "string" ||
     typeof category !== "string"
   ) {
     return NextResponse.json(
-      { error: "title, body, category are required" },
+      { error: "title, category are required" },
       { status: 400 }
     );
   }
@@ -75,7 +73,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       lat: spot.lat,
       lng: spot.lng,
       title: title.trim(),
-      body: pinBody.trim(),
+      body: "",
       category,
       authorId: user.id,
       spotId: id,

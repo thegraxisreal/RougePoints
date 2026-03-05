@@ -6,7 +6,6 @@ export type Pin = {
   lat: number;
   lng: number;
   title: string;
-  body: string;
   category: string;
   fireCount: number;
   skullCount: number;
@@ -27,6 +26,7 @@ type PinsStore = {
   addPin: (pin: Pin) => void;
   removePin: (id: string) => void;
   selectPin: (pin: Pin | null) => void;
+  updatePin: (id: string, partial: Partial<Pin>) => void;
   setDropMode: (on: boolean) => void;
   setPendingCoords: (coords: { lat: number; lng: number } | null) => void;
   openCompose: (coords: { lat: number; lng: number }) => void;
@@ -43,6 +43,14 @@ export const usePinsStore = create<PinsStore>((set) => ({
   addPin: (pin) => set((s) => ({ pins: [pin, ...s.pins] })),
   removePin: (id) => set((s) => ({ pins: s.pins.filter((p) => p.id !== id) })),
   selectPin: (pin) => set({ selectedPin: pin }),
+  updatePin: (id, partial) =>
+    set((s) => ({
+      pins: s.pins.map((p) => (p.id === id ? { ...p, ...partial } : p)),
+      selectedPin:
+        s.selectedPin?.id === id
+          ? { ...s.selectedPin, ...partial }
+          : s.selectedPin,
+    })),
   setDropMode: (dropMode) => set({ dropMode }),
   setPendingCoords: (pendingCoords) => set({ pendingCoords }),
   openCompose: (coords) =>
