@@ -63,17 +63,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
 
-    const { lat, lng, title, body: pinBody, category } = body;
+    const { lat, lng, title, category } = body;
 
     if (
       typeof lat !== "number" ||
       typeof lng !== "number" ||
       typeof title !== "string" ||
-      typeof pinBody !== "string" ||
       typeof category !== "string"
     ) {
       return NextResponse.json(
-        { error: "lat, lng, title, body, category are required" },
+        { error: "lat, lng, title, category are required" },
         { status: 400 }
       );
     }
@@ -83,7 +82,6 @@ export async function POST(req: NextRequest) {
         lat,
         lng,
         title: title.trim(),
-        body: pinBody.trim(),
         category,
         authorId: user.id,
       },

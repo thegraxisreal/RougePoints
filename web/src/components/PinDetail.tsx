@@ -122,11 +122,6 @@ export function PinDetail() {
             </div>
           </div>
 
-          {/* Story body */}
-          <p className="text-[15px] text-white/70 leading-relaxed font-display italic mb-5">
-            &ldquo;{selectedPin.body}&rdquo;
-          </p>
-
           {/* Author row */}
           <div className="flex items-center gap-2 mb-5">
             {selectedPin.author?.avatarUrl ? (

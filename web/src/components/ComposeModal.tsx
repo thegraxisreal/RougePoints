@@ -15,7 +15,6 @@ const CATEGORIES = [
 export function ComposeModal() {
   const { composeOpen, pendingCoords, closeCompose, addPin } = usePinsStore();
   const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const [category, setCategory] = useState("funny");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +23,7 @@ export function ComposeModal() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!title.trim() || !body.trim() || !pendingCoords) return;
+    if (!title.trim() || !pendingCoords) return;
     setLoading(true);
     setError(null);
     try {
@@ -35,7 +34,6 @@ export function ComposeModal() {
           lat: pendingCoords.lat,
           lng: pendingCoords.lng,
           title: title.trim(),
-          body: body.trim(),
           category,
         }),
       });
@@ -46,7 +44,6 @@ export function ComposeModal() {
       const pin = await res.json();
       addPin(pin);
       setTitle("");
-      setBody("");
       setCategory("funny");
       closeCompose();
     } catch (err) {
@@ -123,23 +120,6 @@ export function ComposeModal() {
             <div className="text-right text-[10px] text-white/20 mt-1">{title.length}/60</div>
           </div>
 
-          {/* Body */}
-          <div>
-            <label className="text-[11px] uppercase tracking-widest text-white/35 mb-2 block">
-              Story <span className="text-white/20 normal-case tracking-normal">(max 280)</span>
-            </label>
-            <textarea
-              value={body}
-              onChange={(e) => setBody(e.target.value.slice(0, 280))}
-              placeholder="Keep it raw. The best stories never need editing..."
-              maxLength={280}
-              rows={4}
-              required
-              className="w-full resize-none rounded-xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-sm text-white placeholder-white/20 outline-none focus:border-amber-400/40 focus:ring-1 focus:ring-amber-400/20 transition"
-            />
-            <div className="text-right text-[10px] text-white/20 mt-1">{body.length}/280</div>
-          </div>
-
           {error && (
             <p className="text-sm text-red-400 bg-red-400/10 rounded-lg px-3 py-2">{error}</p>
           )}
@@ -154,7 +134,7 @@ export function ComposeModal() {
             </button>
             <button
               type="submit"
-              disabled={loading || !title.trim() || !body.trim()}
+              disabled={loading || !title.trim()}
               className="flex-1 rounded-xl bg-amber-400 py-2.5 text-sm font-semibold text-black hover:bg-amber-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
             >
               {loading ? "Dropping..." : "Drop it"}

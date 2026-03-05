@@ -6,7 +6,6 @@ export type Pin = {
   lat: number;
   lng: number;
   title: string;
-  body: string;
   category: string;
   fireCount: number;
   skullCount: number;

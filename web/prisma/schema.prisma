@@ -51,7 +51,6 @@ model Pin {
   lng       Float
 
   title     String
-  body      String
   category  String   // "funny" | "mystery" | "danger" | "legend" | "wholesome" | "other"
 
   // Visibility lifecycle
