@@ -19,6 +19,7 @@ const AppMap = dynamic(
 export default function MapPage() {
   const [lightMode, setLightMode] = useState(true);
   const [satelliteMode, setSatelliteMode] = useState(false);
+  const [satelliteHintDismissed, setSatelliteHintDismissed] = useState(false);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
 
@@ -40,24 +41,39 @@ export default function MapPage() {
       {/* ── Floating header ── */}
       <header className="pointer-events-none absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 sm:px-6">
         {/* Logo */}
-        <a
-          href="/"
-          className="pointer-events-auto inline-flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-black/50 backdrop-blur-md px-4 py-2 hover:bg-black/60 transition"
-        >
-          <svg aria-hidden="true" viewBox="0 0 32 32" className="h-6 w-6">
-            <defs>
-              <linearGradient id="rp-grad" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stopColor="#fbbf24" />
-                <stop offset="1" stopColor="#f59e0b" />
-              </linearGradient>
-            </defs>
-            <path
-              d="M16 2c-5.2 0-9.5 4.2-9.5 9.4 0 6.7 8.2 17 9 18 .3.4.7.4 1 0 .8-1 9-11.3 9-18C25.5 6.2 21.2 2 16 2Zm0 13.2a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"
-              fill="url(#rp-grad)"
-            />
-          </svg>
-          <span className="font-display text-base italic text-white/80">RoguePoints</span>
-        </a>
+        <div className="pointer-events-auto relative group">
+          <a
+            href="/"
+            className="inline-flex items-center gap-2.5 rounded-xl border border-white/[0.08] bg-black/50 backdrop-blur-md px-4 py-2 hover:bg-black/60 transition"
+          >
+            <svg aria-hidden="true" viewBox="0 0 32 32" className="h-6 w-6">
+              <defs>
+                <linearGradient id="rp-grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0" stopColor="#fbbf24" />
+                  <stop offset="1" stopColor="#f59e0b" />
+                </linearGradient>
+              </defs>
+              <path
+                d="M16 2c-5.2 0-9.5 4.2-9.5 9.4 0 6.7 8.2 17 9 18 .3.4.7.4 1 0 .8-1 9-11.3 9-18C25.5 6.2 21.2 2 16 2Zm0 13.2a4 4 0 1 1 0-8 4 4 0 0 1 0 8Z"
+                fill="url(#rp-grad)"
+              />
+            </svg>
+            <span className="font-display text-base italic text-white/80">RoguePoints</span>
+          </a>
+          {/* Hover tooltip */}
+          <div className="pointer-events-none absolute top-full left-0 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            <div className="rounded-xl border border-white/10 bg-black/80 backdrop-blur-md px-3.5 py-2.5 shadow-xl w-max">
+              <div className="flex items-center gap-2">
+                <span className="text-white font-semibold text-sm">RoguePoints</span>
+                <span className="rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-400 border border-amber-400/20">v0.2</span>
+              </div>
+              <div className="mt-1 flex items-center gap-1.5">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[11px] text-white/50">Early Access Beta</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Map mode toggles */}
         <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md px-1 py-1">
@@ -88,20 +104,30 @@ export default function MapPage() {
           <div className="h-4 w-px bg-white/10" />
 
           {/* Satellite toggle */}
-          <button
-            onClick={() => setSatelliteMode((v) => !v)}
-            title={satelliteMode ? "Switch to street map" : "Switch to satellite"}
-            className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
-              satelliteMode
-                ? "bg-emerald-500/20 text-emerald-400"
-                : "text-white/70 hover:text-white hover:bg-white/10"
-            }`}
-          >
-            {/* Globe / satellite icon */}
-            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
-              <path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.164 13.164 0 0 0-2.413-5.773 8.117 8.117 0 0 0-1.826 0 13.164 13.164 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM14.8 9.167a9.983 9.983 0 0 1-3.726 1.07 14.88 14.88 0 0 1 .676 4.608 8.017 8.017 0 0 0 3.274-4.166 8.095 8.095 0 0 0-.223-1.512ZM10 18a7.985 7.985 0 0 0 1.088-.076 13.36 13.36 0 0 0-.677-4.68A8.467 8.467 0 0 0 10 13.5a8.467 8.467 0 0 0-.411-.256 13.36 13.36 0 0 0-.677 4.68A7.984 7.984 0 0 0 10 18ZM5.2 9.167a8.095 8.095 0 0 0-.224 1.512 8.017 8.017 0 0 0 3.275 4.166 14.88 14.88 0 0 1 .675-4.607A9.983 9.983 0 0 1 5.2 9.167ZM6.948 2.602a8.028 8.028 0 0 0-3.503 2.81 8.547 8.547 0 0 0 1.84 1.662 14.899 14.899 0 0 1 1.663-4.472Z"/>
-            </svg>
-          </button>
+          <div className="relative">
+            {/* Hint bubble — visible until satellite mode is activated */}
+            {!satelliteHintDismissed && (
+              <div className="pointer-events-none absolute top-full left-1/2 -translate-x-1/2 mt-3 w-max max-w-[180px] rounded-xl bg-white/95 px-3 py-2 text-center text-[11px] font-medium leading-snug text-gray-800 shadow-xl border border-white/60 backdrop-blur-sm">
+                {/* arrow pointing up at button */}
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-[6px] border-transparent border-b-white/95" />
+                🛰️ press this for a real camera view
+              </div>
+            )}
+            <button
+              onClick={() => { setSatelliteMode((v) => !v); setSatelliteHintDismissed(true); }}
+              title={satelliteMode ? "Switch to street map" : "Switch to satellite"}
+              className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
+                satelliteMode
+                  ? "bg-emerald-500/20 text-emerald-400"
+                  : "text-white/70 hover:text-white hover:bg-white/10"
+              }`}
+            >
+              {/* Globe / satellite icon */}
+              <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                <path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.164 13.164 0 0 0-2.413-5.773 8.117 8.117 0 0 0-1.826 0 13.164 13.164 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM14.8 9.167a9.983 9.983 0 0 1-3.726 1.07 14.88 14.88 0 0 1 .676 4.608 8.017 8.017 0 0 0 3.274-4.166 8.095 8.095 0 0 0-.223-1.512ZM10 18a7.985 7.985 0 0 0 1.088-.076 13.36 13.36 0 0 0-.677-4.68A8.467 8.467 0 0 0 10 13.5a8.467 8.467 0 0 0-.411-.256 13.36 13.36 0 0 0-.677 4.68A7.984 7.984 0 0 0 10 18ZM5.2 9.167a8.095 8.095 0 0 0-.224 1.512 8.017 8.017 0 0 0 3.275 4.166 14.88 14.88 0 0 1 .675-4.607A9.983 9.983 0 0 1 5.2 9.167ZM6.948 2.602a8.028 8.028 0 0 0-3.503 2.81 8.547 8.547 0 0 0 1.84 1.662 14.899 14.899 0 0 1 1.663-4.472Z"/>
+              </svg>
+            </button>
+          </div>
         </div>
 
         {/* User avatar */}

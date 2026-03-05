@@ -50,7 +50,19 @@ function buildEmojiRing(pin: Pin): string {
     .join("");
 }
 
-function makePinIcon(color: string, pin?: Pin): L.DivIcon {
+function makeTitleCard(pin: Pin): string {
+  const title = pin.title.length > 60 ? pin.title.slice(0, 57) + "..." : pin.title;
+  const author = pin.author?.handle ? `@${pin.author.handle}` : "";
+  // Escape HTML entities
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  return `<div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;background:rgba(20,20,30,0.92);color:#fff;border-radius:10px;padding:6px 10px;font-size:11px;line-height:1.3;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.4);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.1)">
+    <div style="overflow:hidden;text-overflow:ellipsis;font-weight:600">${esc(title)}</div>
+    ${author ? `<div style="opacity:0.6;font-size:10px;margin-top:1px">${esc(author)}</div>` : ""}
+    <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid rgba(20,20,30,0.92)"></div>
+  </div>`;
+}
+
+function makePinIcon(color: string, pin?: Pin, showTitleCard?: boolean): L.DivIcon {
   const filterId = `f${color.replace("#", "")}`;
   const svg = `<svg viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -64,7 +76,8 @@ function makePinIcon(color: string, pin?: Pin): L.DivIcon {
   </svg>`;
 
   const emojiHtml = pin ? buildEmojiRing(pin) : "";
-  const html = `<div style="position:relative;width:30px;height:38px">${svg}${emojiHtml}</div>`;
+  const titleCardHtml = showTitleCard && pin ? makeTitleCard(pin) : "";
+  const html = `<div style="position:relative;width:30px;height:38px;overflow:visible">${titleCardHtml}${svg}${emojiHtml}</div>`;
 
   return L.divIcon({
     html,
@@ -228,6 +241,8 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   const map = useMap();
   const { pins } = usePinsStore();
   const markersRef = useRef<Map<string, { marker: L.Marker; hash: string }>>(new Map());
+  // Track which pins randomly got a title card (1 in 5 chance, persists until page reload)
+  const titleCardRollsRef = useRef<Map<string, boolean>>(new Map());
   const onPinClickRef = useRef(onPinClick);
   onPinClickRef.current = onPinClick;
 
@@ -248,16 +263,22 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
       const hash = reactionHash(pin);
       const existing = markersRef.current.get(pin.id);
 
+      // Roll once per pin per page load for title card visibility
+      if (!titleCardRollsRef.current.has(pin.id)) {
+        titleCardRollsRef.current.set(pin.id, Math.random() < 0.2);
+      }
+      const showTitleCard = titleCardRollsRef.current.get(pin.id)!;
+
       if (existing) {
         // Update icon if reactions changed
         if (existing.hash !== hash) {
-          existing.marker.setIcon(makePinIcon(color, pin));
+          existing.marker.setIcon(makePinIcon(color, pin, showTitleCard));
           existing.hash = hash;
         }
         continue;
       }
 
-      const marker = L.marker([pin.lat, pin.lng], { icon: makePinIcon(color, pin) })
+      const marker = L.marker([pin.lat, pin.lng], { icon: makePinIcon(color, pin, showTitleCard) })
         .addTo(map)
         .on("click", (e) => {
           L.DomEvent.stopPropagation(e);
