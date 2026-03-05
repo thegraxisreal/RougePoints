@@ -18,6 +18,7 @@ const AppMap = dynamic(
 
 export default function MapPage() {
   const [lightMode, setLightMode] = useState(true);
+  const [satelliteMode, setSatelliteMode] = useState(false);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
 
@@ -34,7 +35,7 @@ export default function MapPage() {
   return (
     <div className="relative h-screen w-screen overflow-hidden bg-[#0a0a0f]">
       {/* Full-screen map */}
-      <AppMap onPinClick={handlePinClick} onSpotClick={handleSpotClick} lightMode={lightMode} />
+      <AppMap onPinClick={handlePinClick} onSpotClick={handleSpotClick} lightMode={lightMode} satelliteMode={satelliteMode} />
 
       {/* ── Floating header ── */}
       <header className="pointer-events-none absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 py-3 sm:px-6">
@@ -58,14 +59,19 @@ export default function MapPage() {
           <span className="font-display text-base italic text-white/80">RoguePoints</span>
         </a>
 
-        {/* Light mode toggle */}
-        <div className="pointer-events-auto flex items-center gap-2">
+        {/* Map mode toggles */}
+        <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md px-1 py-1">
+          {/* Light / Dark toggle */}
           <button
-            onClick={() => setLightMode((v) => !v)}
-            title={lightMode ? "Switch to dark map" : "Switch to light map"}
-            className="flex h-9 w-9 items-center justify-center rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md text-white/70 hover:text-white hover:bg-black/70 transition"
+            onClick={() => { if (!satelliteMode) setLightMode((v) => !v); }}
+            title={satelliteMode ? "Disable satellite to toggle" : lightMode ? "Switch to dark map" : "Switch to light map"}
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
+              satelliteMode
+                ? "text-white/25 cursor-not-allowed"
+                : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
           >
-            {lightMode ? (
+            {lightMode && !satelliteMode ? (
               /* Moon icon */
               <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                 <path fillRule="evenodd" d="M7.455 2.004a.75.75 0 0 1 .26.77 7 7 0 0 0 9.958 7.967.75.75 0 0 1 1.067.853A8.5 8.5 0 1 1 6.647 1.921a.75.75 0 0 1 .808.083Z" clipRule="evenodd"/>
@@ -76,6 +82,25 @@ export default function MapPage() {
                 <path d="M10 2a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 2ZM10 15a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-1.5 0v-1.5A.75.75 0 0 1 10 15ZM10 7a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM15.657 5.404a.75.75 0 1 0-1.06-1.06l-1.061 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM6.464 14.596a.75.75 0 1 0-1.06-1.06l-1.06 1.06a.75.75 0 0 0 1.06 1.06l1.06-1.06ZM18 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 18 10ZM5 10a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1 0-1.5h1.5A.75.75 0 0 1 5 10ZM14.596 15.657a.75.75 0 0 0 1.06-1.06l-1.06-1.061a.75.75 0 1 0-1.06 1.06l1.06 1.06ZM5.404 6.464a.75.75 0 0 0 1.06-1.06L5.404 4.343a.75.75 0 1 0-1.06 1.06l1.06 1.061Z"/>
               </svg>
             )}
+          </button>
+
+          {/* Divider */}
+          <div className="h-4 w-px bg-white/10" />
+
+          {/* Satellite toggle */}
+          <button
+            onClick={() => setSatelliteMode((v) => !v)}
+            title={satelliteMode ? "Switch to street map" : "Switch to satellite"}
+            className={`flex h-8 w-8 items-center justify-center rounded-full transition ${
+              satelliteMode
+                ? "bg-emerald-500/20 text-emerald-400"
+                : "text-white/70 hover:text-white hover:bg-white/10"
+            }`}
+          >
+            {/* Globe / satellite icon */}
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path d="M16.555 5.412a8.028 8.028 0 0 0-3.503-2.81 14.899 14.899 0 0 1 1.663 4.472 8.547 8.547 0 0 0 1.84-1.662ZM13.326 7.825a13.164 13.164 0 0 0-2.413-5.773 8.117 8.117 0 0 0-1.826 0 13.164 13.164 0 0 0-2.413 5.773A8.473 8.473 0 0 0 10 8.5c1.18 0 2.304-.24 3.326-.675ZM14.8 9.167a9.983 9.983 0 0 1-3.726 1.07 14.88 14.88 0 0 1 .676 4.608 8.017 8.017 0 0 0 3.274-4.166 8.095 8.095 0 0 0-.223-1.512ZM10 18a7.985 7.985 0 0 0 1.088-.076 13.36 13.36 0 0 0-.677-4.68A8.467 8.467 0 0 0 10 13.5a8.467 8.467 0 0 0-.411-.256 13.36 13.36 0 0 0-.677 4.68A7.984 7.984 0 0 0 10 18ZM5.2 9.167a8.095 8.095 0 0 0-.224 1.512 8.017 8.017 0 0 0 3.275 4.166 14.88 14.88 0 0 1 .675-4.607A9.983 9.983 0 0 1 5.2 9.167ZM6.948 2.602a8.028 8.028 0 0 0-3.503 2.81 8.547 8.547 0 0 0 1.84 1.662 14.899 14.899 0 0 1 1.663-4.472Z"/>
+            </svg>
           </button>
         </div>
 

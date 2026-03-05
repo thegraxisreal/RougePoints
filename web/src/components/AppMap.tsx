@@ -320,19 +320,28 @@ type Props = {
   onPinClick: (pin: Pin) => void;
   onSpotClick: (spot: Spot) => void;
   lightMode?: boolean;
+  satelliteMode?: boolean;
 };
 
-export function AppMap({ onPinClick, onSpotClick, lightMode = false }: Props) {
+export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMode = false }: Props) {
   const { latitude, longitude, zoom } = useViewportStore();
 
-  const tileUrl = lightMode
-    ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-    : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+  const tileUrl = satelliteMode
+    ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+    : lightMode
+      ? "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
 
-  const bgColor = lightMode ? "#f0ede8" : "#0a0a0f";
+  const bgColor = satelliteMode ? "#1a3a1a" : lightMode ? "#f0ede8" : "#0a0a0f";
+
+  const mapClass = satelliteMode
+    ? "map-satellite h-full w-full"
+    : lightMode
+      ? "map-light h-full w-full"
+      : "map-dark h-full w-full";
 
   return (
-    <div className={lightMode ? "map-light h-full w-full" : "map-dark h-full w-full"}>
+    <div className={mapClass}>
       <MapContainer
         center={[latitude, longitude]}
         zoom={zoom}
@@ -344,8 +353,8 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false }: Props) {
         <TileLayer
           key={tileUrl}
           url={tileUrl}
-          subdomains="abcd"
-          maxZoom={20}
+          subdomains={satelliteMode ? undefined : "abcd"}
+          maxZoom={satelliteMode ? 19 : 20}
         />
         <PinFetcher />
         <SpotFetcher />
