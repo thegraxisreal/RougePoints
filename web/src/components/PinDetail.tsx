@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useUser } from "@clerk/nextjs";
 import { usePinsStore, Pin } from "@/store/pins";
 
@@ -14,11 +14,11 @@ const CATEGORY_STYLES: Record<string, string> = {
 };
 
 const REACTIONS = [
-  { key: "fireCount", emoji: "🔥", label: "fire" },
-  { key: "laughCount", emoji: "😂", label: "laugh" },
-  { key: "heartCount", emoji: "❤️", label: "heart" },
-  { key: "skullCount", emoji: "💀", label: "skull" },
-  { key: "wowCount", emoji: "😮", label: "wow" },
+  { key: "fireCount", emoji: "\u{1F525}", label: "fire" },
+  { key: "laughCount", emoji: "\u{1F602}", label: "laugh" },
+  { key: "heartCount", emoji: "\u2764\uFE0F", label: "heart" },
+  { key: "skullCount", emoji: "\u{1F480}", label: "skull" },
+  { key: "wowCount", emoji: "\u{1F62E}", label: "wow" },
 ] as const;
 
 function timeAgo(dateStr: string): string {
@@ -33,11 +33,14 @@ function timeAgo(dateStr: string): string {
 }
 
 export function PinDetail() {
-  const { selectedPin, selectPin, removePin } = usePinsStore();
+  const { selectedPin, selectPin, removePin, updatePin } = usePinsStore();
   const { isSignedIn } = useUser();
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  // Track which reactions the current user has toggled (kind -> true/false)
+  const [myReactions, setMyReactions] = useState<Record<string, boolean>>({});
+  const [reactingKind, setReactingKind] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -47,10 +50,47 @@ export function PinDetail() {
       .catch(() => setCurrentUserId(null));
   }, [isSignedIn]);
 
-  // Reset delete error when a different pin is selected
+  // Reset state when a different pin is selected
   useEffect(() => {
     setDeleteError(null);
+    setMyReactions({});
   }, [selectedPin?.id]);
+
+  const handleReaction = useCallback(async (kind: string, countKey: string) => {
+    if (!selectedPin || !isSignedIn || reactingKind) return;
+
+    const alreadyReacted = myReactions[kind] ?? false;
+    setReactingKind(kind);
+
+    // Optimistic update
+    const delta = alreadyReacted ? -1 : 1;
+    const currentCount = (selectedPin[countKey as keyof Pin] as number) ?? 0;
+    const newCount = Math.max(0, currentCount + delta);
+    updatePin(selectedPin.id, { [countKey]: newCount });
+    setMyReactions((prev) => ({ ...prev, [kind]: !alreadyReacted }));
+
+    try {
+      if (alreadyReacted) {
+        const res = await fetch(`/api/pins/${selectedPin.id}/reactions?kind=${kind}`, {
+          method: "DELETE",
+        });
+        if (!res.ok && res.status !== 204) throw new Error();
+      } else {
+        const res = await fetch(`/api/pins/${selectedPin.id}/reactions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind }),
+        });
+        if (!res.ok) throw new Error();
+      }
+    } catch {
+      // Revert on failure
+      updatePin(selectedPin.id, { [countKey]: currentCount });
+      setMyReactions((prev) => ({ ...prev, [kind]: alreadyReacted }));
+    } finally {
+      setReactingKind(null);
+    }
+  }, [selectedPin, isSignedIn, myReactions, reactingKind, updatePin]);
 
   if (!selectedPin) return null;
 
@@ -122,11 +162,6 @@ export function PinDetail() {
             </div>
           </div>
 
-          {/* Story body */}
-          <p className="text-[15px] text-white/70 leading-relaxed font-display italic mb-5">
-            &ldquo;{selectedPin.body}&rdquo;
-          </p>
-
           {/* Author row */}
           <div className="flex items-center gap-2 mb-5">
             {selectedPin.author?.avatarUrl ? (
@@ -154,10 +189,17 @@ export function PinDetail() {
           <div className="flex gap-2 flex-wrap">
             {REACTIONS.map((r) => {
               const count = selectedPin[r.key as keyof Pin] as number;
+              const active = myReactions[r.label] ?? false;
               return (
                 <button
                   key={r.key}
-                  className="inline-flex items-center gap-1.5 rounded-full bg-white/5 border border-white/[0.06] px-3 py-1.5 text-sm text-white/50 hover:bg-white/10 hover:text-white/80 transition"
+                  onClick={() => handleReaction(r.label, r.key)}
+                  disabled={!isSignedIn || reactingKind !== null}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm transition ${
+                    active
+                      ? "bg-white/15 border-white/20 text-white"
+                      : "bg-white/5 border-white/[0.06] text-white/50 hover:bg-white/10 hover:text-white/80"
+                  } disabled:cursor-not-allowed`}
                 >
                   {r.emoji}
                   {count > 0 && <span className="text-xs text-white/35">{count}</span>}

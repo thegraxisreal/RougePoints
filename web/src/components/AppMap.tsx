@@ -17,7 +17,40 @@ const CATEGORY_COLORS: Record<string, string> = {
   other: "#9ca3af",
 };
 
-function makePinIcon(color: string): L.DivIcon {
+const REACTION_EMOJIS: { key: keyof Pin; emoji: string }[] = [
+  { key: "fireCount", emoji: "\u{1F525}" },
+  { key: "laughCount", emoji: "\u{1F602}" },
+  { key: "heartCount", emoji: "\u2764\uFE0F" },
+  { key: "skullCount", emoji: "\u{1F480}" },
+  { key: "wowCount", emoji: "\u{1F62E}" },
+];
+
+const MAX_ORBITING_EMOJIS = 8;
+
+function buildEmojiRing(pin: Pin): string {
+  const emojis: string[] = [];
+  for (const r of REACTION_EMOJIS) {
+    const count = (pin[r.key] as number) ?? 0;
+    for (let i = 0; i < count && emojis.length < MAX_ORBITING_EMOJIS; i++) {
+      emojis.push(r.emoji);
+    }
+  }
+  if (emojis.length === 0) return "";
+
+  // Place emojis evenly on a circle (radius 22px) around pin centre (15, 15 in the 30x38 icon)
+  const cx = 15, cy = 15, radius = 22;
+  const startAngle = -Math.PI / 2; // top
+  return emojis
+    .map((e, i) => {
+      const angle = startAngle + (2 * Math.PI * i) / emojis.length;
+      const x = cx + radius * Math.cos(angle) - 6; // 6 ≈ half emoji width
+      const y = cy + radius * Math.sin(angle) - 6;
+      return `<span style="position:absolute;left:${x.toFixed(1)}px;top:${y.toFixed(1)}px;font-size:12px;line-height:1;pointer-events:none;filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5))">${e}</span>`;
+    })
+    .join("");
+}
+
+function makePinIcon(color: string, pin?: Pin): L.DivIcon {
   const filterId = `f${color.replace("#", "")}`;
   const svg = `<svg viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -29,8 +62,12 @@ function makePinIcon(color: string): L.DivIcon {
       fill="${color}" filter="url(#${filterId})"/>
     <circle cx="15" cy="15" r="6.5" fill="white" opacity="0.92"/>
   </svg>`;
+
+  const emojiHtml = pin ? buildEmojiRing(pin) : "";
+  const html = `<div style="position:relative;width:30px;height:38px">${svg}${emojiHtml}</div>`;
+
   return L.divIcon({
-    html: svg,
+    html,
     className: "",
     iconSize: [30, 38],
     iconAnchor: [15, 38],
@@ -181,11 +218,16 @@ function CursorEffect() {
   return null;
 }
 
+// Build a simple string hash of a pin's reaction counts for change detection
+function reactionHash(pin: Pin): string {
+  return `${pin.fireCount}|${pin.skullCount}|${pin.heartCount}|${pin.laughCount}|${pin.wowCount}`;
+}
+
 // Renders pin markers and handles clicks
 function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   const map = useMap();
   const { pins } = usePinsStore();
-  const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const markersRef = useRef<Map<string, { marker: L.Marker; hash: string }>>(new Map());
   const onPinClickRef = useRef(onPinClick);
   onPinClickRef.current = onPinClick;
 
@@ -193,24 +235,35 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
     const currentIds = new Set(pins.map((p) => p.id));
 
     // Remove stale markers
-    for (const [id, marker] of markersRef.current) {
+    for (const [id, entry] of markersRef.current) {
       if (!currentIds.has(id)) {
-        marker.remove();
+        entry.marker.remove();
         markersRef.current.delete(id);
       }
     }
 
-    // Add new markers
+    // Add or update markers
     for (const pin of pins) {
-      if (markersRef.current.has(pin.id)) continue;
       const color = CATEGORY_COLORS[pin.category] ?? CATEGORY_COLORS.other;
-      const marker = L.marker([pin.lat, pin.lng], { icon: makePinIcon(color) })
+      const hash = reactionHash(pin);
+      const existing = markersRef.current.get(pin.id);
+
+      if (existing) {
+        // Update icon if reactions changed
+        if (existing.hash !== hash) {
+          existing.marker.setIcon(makePinIcon(color, pin));
+          existing.hash = hash;
+        }
+        continue;
+      }
+
+      const marker = L.marker([pin.lat, pin.lng], { icon: makePinIcon(color, pin) })
         .addTo(map)
         .on("click", (e) => {
           L.DomEvent.stopPropagation(e);
           onPinClickRef.current(pin);
         });
-      markersRef.current.set(pin.id, marker);
+      markersRef.current.set(pin.id, { marker, hash });
     }
   }, [pins, map]);
 
