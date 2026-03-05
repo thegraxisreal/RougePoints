@@ -350,12 +350,20 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
         className="h-full w-full"
         style={{ background: bgColor }}
       >
-        <TileLayer
-          key={tileUrl}
-          url={tileUrl}
-          subdomains={satelliteMode ? undefined : "abcd"}
-          maxZoom={satelliteMode ? 19 : 20}
-        />
+        {satelliteMode ? (
+          <TileLayer
+            key="satellite"
+            url={tileUrl}
+            maxZoom={19}
+          />
+        ) : (
+          <TileLayer
+            key={tileUrl}
+            url={tileUrl}
+            subdomains="abcd"
+            maxZoom={20}
+          />
+        )}
         <PinFetcher />
         <SpotFetcher />
         <MapClickHandler />
