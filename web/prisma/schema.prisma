@@ -88,6 +88,22 @@ model Spot {
   pins      Pin[]
 }
 
+// ─── ClusterLabel ─────────────────────────────────────────────────────────
+// Admin-editable label for map pin clusters (e.g. town/neighborhood name).
+
+model ClusterLabel {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Center of the cluster region
+  lat       Float
+  lng       Float
+
+  // Display name (e.g. "Downtown", "Elm Street")
+  name      String   @default("Town")
+}
+
 // ─── Media ────────────────────────────────────────────────────────────────────
 
 model Media {
