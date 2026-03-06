@@ -4,14 +4,16 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { MapContainer, TileLayer, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import Supercluster from "supercluster";
 import { usePinsStore, Pin } from "@/store/pins";
 import { useSpotsStore, Spot } from "@/store/spots";
 import { useViewportStore } from "@/store/viewport";
 import { useClusterLabelsStore, ClusterLabel } from "@/store/clusterLabels";
 
-/** Zoom level at or above which individual pins are shown; below this clusters appear. */
+/** Zoom level at or above which individual pins are shown; below this, town clusters appear. */
 const CLUSTER_ZOOM_THRESHOLD = 13;
+
+/** Radius (in degrees) around a town center that captures pins into the cluster. ~0.015 ≈ 1.7 km */
+const TOWN_RADIUS_DEG = 0.015;
 
 const CATEGORY_COLORS: Record<string, string> = {
   funny: "#fbbf24",
@@ -137,7 +139,7 @@ function makeSpotIcon(type: string, hasPins: boolean = false): L.DivIcon {
 
 // ─── Needle cluster marker ──────────────────────────────────────────────────
 
-function makeNeedleIcon(label: string): L.DivIcon {
+function makeNeedleIcon(label: string, count: number): L.DivIcon {
   const esc = (s: string) =>
     s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   const needleSvg = `<svg viewBox="0 0 20 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -151,14 +153,50 @@ function makeNeedleIcon(label: string): L.DivIcon {
     <circle cx="10" cy="8" r="3" fill="white" opacity="0.9"/>
   </svg>`;
 
+  const countBadge = count > 0
+    ? `<div style="position:absolute;top:-4px;right:-10px;min-width:18px;height:18px;background:#f43f5e;color:#fff;border-radius:9px;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 4px;border:2px solid rgba(0,0,0,0.3);pointer-events:none">${count}</div>`
+    : "";
+
   const labelHtml = `<div style="position:absolute;top:50px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:11px;font-weight:600;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,0.8),0 0 6px rgba(0,0,0,0.5);background:rgba(20,20,30,0.75);padding:2px 8px;border-radius:8px;pointer-events:none;line-height:1.3">${esc(label)}</div>`;
 
   return L.divIcon({
-    html: `<div style="position:relative;width:20px;height:48px;overflow:visible">${needleSvg}${labelHtml}</div>`,
+    html: `<div style="position:relative;width:20px;height:48px;overflow:visible">${needleSvg}${countBadge}${labelHtml}</div>`,
     className: "",
     iconSize: [20, 48],
     iconAnchor: [10, 48],
   });
+}
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+/** Check if a pin is within a town's capture radius */
+function pinInTown(pin: Pin, town: ClusterLabel): boolean {
+  const dLat = pin.lat - town.lat;
+  const dLng = pin.lng - town.lng;
+  return dLat * dLat + dLng * dLng <= TOWN_RADIUS_DEG * TOWN_RADIUS_DEG;
+}
+
+/** Build a set of pin IDs that belong to any town */
+function getClusteredPinIds(pins: Pin[], towns: ClusterLabel[]): Set<string> {
+  const ids = new Set<string>();
+  for (const pin of pins) {
+    for (const town of towns) {
+      if (pinInTown(pin, town)) {
+        ids.add(pin.id);
+        break;
+      }
+    }
+  }
+  return ids;
+}
+
+/** Count how many pins fall within a town's radius */
+function countPinsInTown(pins: Pin[], town: ClusterLabel): number {
+  let count = 0;
+  for (const pin of pins) {
+    if (pinInTown(pin, town)) count++;
+  }
+  return count;
 }
 
 // ─── Cluster label fetcher ──────────────────────────────────────────────────
@@ -198,130 +236,44 @@ function ClusterLabelFetcher() {
   return null;
 }
 
-// ─── Cluster layer using Supercluster ───────────────────────────────────────
+// ─── Town cluster layer (admin-placed towns) ────────────────────────────────
 
-type ClusterEntry = {
-  clusterId: number;
-  lat: number;
-  lng: number;
-  count: number;
-  expansionZoom: number;
-};
-
-function ClusterLayer() {
+function TownClusterLayer() {
   const map = useMap();
   const { pins } = usePinsStore();
   const { labels } = useClusterLabelsStore();
-  const { isAdmin, adminCode } = useSpotsStore();
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
-  const [clusters, setClusters] = useState<ClusterEntry[]>([]);
   const [currentZoom, setCurrentZoom] = useState(map.getZoom());
-  const indexRef = useRef<Supercluster | null>(null);
   const editingRef = useRef<string | null>(null);
 
-  // Rebuild Supercluster index when pins change
-  useEffect(() => {
-    const points: Supercluster.PointFeature<{ pinId: string }>[] = pins.map((p) => ({
-      type: "Feature" as const,
-      geometry: { type: "Point" as const, coordinates: [p.lng, p.lat] },
-      properties: { pinId: p.id },
-    }));
-
-    const index = new Supercluster({ radius: 60, maxZoom: CLUSTER_ZOOM_THRESHOLD - 1 });
-    index.load(points);
-    indexRef.current = index;
-
-    updateClusters(index, map.getZoom());
-  }, [pins, map]);
-
-  // Listen for zoom changes
   useEffect(() => {
     function onZoomEnd() {
-      const z = map.getZoom();
-      setCurrentZoom(z);
-      if (indexRef.current) updateClusters(indexRef.current, z);
-    }
-    function onMoveEnd() {
-      if (indexRef.current) updateClusters(indexRef.current, map.getZoom());
+      setCurrentZoom(map.getZoom());
     }
     map.on("zoomend", onZoomEnd);
-    map.on("moveend", onMoveEnd);
-    return () => {
-      map.off("zoomend", onZoomEnd);
-      map.off("moveend", onMoveEnd);
-    };
+    return () => { map.off("zoomend", onZoomEnd); };
   }, [map]);
 
-  const updateClusters = useCallback(
-    (index: Supercluster, zoom: number) => {
-      if (zoom >= CLUSTER_ZOOM_THRESHOLD) {
-        setClusters([]);
-        return;
-      }
-      const bounds = map.getBounds();
-      const bbox: [number, number, number, number] = [
-        bounds.getWest(),
-        bounds.getSouth(),
-        bounds.getEast(),
-        bounds.getNorth(),
-      ];
-      const raw = index.getClusters(bbox, Math.floor(zoom));
-      const entries: ClusterEntry[] = [];
-      for (const f of raw) {
-        if (!f.properties.cluster) continue;
-        const [lng, lat] = f.geometry.coordinates;
-        entries.push({
-          clusterId: f.properties.cluster_id as number,
-          lat,
-          lng,
-          count: f.properties.point_count as number,
-          expansionZoom: index.getClusterExpansionZoom(f.properties.cluster_id as number),
-        });
-      }
-      setClusters(entries);
-    },
-    [map],
-  );
-
-  // Find the closest saved label for a cluster position
-  const findLabel = useCallback(
-    (lat: number, lng: number): ClusterLabel | null => {
-      let best: ClusterLabel | null = null;
-      let bestDist = Infinity;
-      for (const l of labels) {
-        const d = (l.lat - lat) ** 2 + (l.lng - lng) ** 2;
-        if (d < bestDist && d < 0.01) {
-          best = l;
-          bestDist = d;
-        }
-      }
-      return best;
-    },
-    [labels],
-  );
-
-  // Render / update cluster markers
   useEffect(() => {
-    const hidden = currentZoom >= CLUSTER_ZOOM_THRESHOLD;
+    const showClusters = currentZoom < CLUSTER_ZOOM_THRESHOLD;
     const activeKeys = new Set<string>();
 
-    if (!hidden) {
-      for (const c of clusters) {
-        const key = `cluster-${c.clusterId}`;
+    if (showClusters) {
+      for (const town of labels) {
+        const key = `town-${town.id}`;
         activeKeys.add(key);
 
-        const savedLabel = findLabel(c.lat, c.lng);
-        const labelText = savedLabel?.name ?? "Town";
-
+        const count = countPinsInTown(pins, town);
         const existing = markersRef.current.get(key);
+
         if (existing) {
-          existing.setLatLng([c.lat, c.lng]);
-          existing.setIcon(makeNeedleIcon(labelText));
+          existing.setLatLng([town.lat, town.lng]);
+          existing.setIcon(makeNeedleIcon(town.name, count));
           continue;
         }
 
-        const marker = L.marker([c.lat, c.lng], {
-          icon: makeNeedleIcon(labelText),
+        const marker = L.marker([town.lat, town.lng], {
+          icon: makeNeedleIcon(town.name, count),
           zIndexOffset: 1000,
         })
           .addTo(map)
@@ -331,21 +283,18 @@ function ClusterLayer() {
             const { isAdmin: isAdminNow, adminCode: code } = useSpotsStore.getState();
 
             if (isAdminNow && editingRef.current !== key) {
-              // Show admin inline edit
+              // Admin: show inline edit popup
               editingRef.current = key;
-              const currentLabel = findLabel(c.lat, c.lng);
-              const currentName = currentLabel?.name ?? "Town";
-
               const popup = L.popup({
                 closeButton: true,
                 className: "cluster-edit-popup",
                 minWidth: 180,
               })
-                .setLatLng([c.lat, c.lng])
+                .setLatLng([town.lat, town.lng])
                 .setContent(
                   `<div style="padding:4px">
-                    <label style="font-size:11px;font-weight:600;color:#ccc;display:block;margin-bottom:4px">Cluster label</label>
-                    <input id="cluster-label-input" type="text" value="${currentName.replace(/"/g, "&quot;")}"
+                    <label style="font-size:11px;font-weight:600;color:#ccc;display:block;margin-bottom:4px">Town name</label>
+                    <input id="cluster-label-input" type="text" value="${town.name.replace(/"/g, "&quot;")}"
                       style="width:100%;padding:4px 8px;border-radius:6px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:13px;outline:none"
                     />
                     <button id="cluster-label-save"
@@ -356,7 +305,6 @@ function ClusterLayer() {
                 )
                 .openOn(map);
 
-              // Wait for DOM to render before attaching listeners
               setTimeout(() => {
                 const input = document.getElementById("cluster-label-input") as HTMLInputElement | null;
                 const btn = document.getElementById("cluster-label-save");
@@ -367,36 +315,16 @@ function ClusterLayer() {
                 const save = () => {
                   const name = input.value.trim();
                   if (!name) return;
-                  const bodyPayload: Record<string, unknown> = {
-                    adminCode: code,
-                    lat: c.lat,
-                    lng: c.lng,
-                    name,
-                  };
-                  if (currentLabel?.id) {
-                    bodyPayload.id = currentLabel.id;
-                    fetch("/api/cluster-labels", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(bodyPayload),
+                  fetch("/api/cluster-labels", {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ adminCode: code, id: town.id, name }),
+                  })
+                    .then((r) => (r.ok ? r.json() : null))
+                    .then((updated) => {
+                      if (updated) useClusterLabelsStore.getState().upsertLabel(updated);
                     })
-                      .then((r) => (r.ok ? r.json() : null))
-                      .then((updated) => {
-                        if (updated) useClusterLabelsStore.getState().upsertLabel(updated);
-                      })
-                      .catch(() => {});
-                  } else {
-                    fetch("/api/cluster-labels", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(bodyPayload),
-                    })
-                      .then((r) => (r.ok ? r.json() : null))
-                      .then((created) => {
-                        if (created) useClusterLabelsStore.getState().upsertLabel(created);
-                      })
-                      .catch(() => {});
-                  }
+                    .catch(() => {});
                   map.closePopup(popup);
                   editingRef.current = null;
                 };
@@ -411,8 +339,8 @@ function ClusterLayer() {
                 editingRef.current = null;
               });
             } else if (!isAdminNow) {
-              // Non-admin: zoom into the cluster
-              map.flyTo([c.lat, c.lng], c.expansionZoom, { duration: 0.6 });
+              // Non-admin: zoom into the town so individual pins appear
+              map.flyTo([town.lat, town.lng], CLUSTER_ZOOM_THRESHOLD, { duration: 0.6 });
             }
           });
 
@@ -420,14 +348,79 @@ function ClusterLayer() {
       }
     }
 
-    // Remove stale cluster markers
+    // Remove stale or hidden markers
     for (const [key, marker] of markersRef.current) {
       if (!activeKeys.has(key)) {
         marker.remove();
         markersRef.current.delete(key);
       }
     }
-  }, [clusters, currentZoom, map, findLabel, labels]);
+  }, [labels, pins, currentZoom, map]);
+
+  return null;
+}
+
+// ─── Town drop handler (admin places a town by clicking the map) ────────────
+
+function TownDropHandler() {
+  const map = useMap();
+
+  useMapEvents({
+    click(e) {
+      const { townDropMode, setTownDropMode } = useClusterLabelsStore.getState();
+      if (!townDropMode) return;
+
+      const { adminCode } = useSpotsStore.getState();
+      const lat = e.latlng.lat;
+      const lng = e.latlng.lng;
+
+      // Show a popup with a name input at the clicked location
+      const popup = L.popup({ closeButton: true, minWidth: 200 })
+        .setLatLng([lat, lng])
+        .setContent(
+          `<div style="padding:4px">
+            <label style="font-size:11px;font-weight:600;color:#ccc;display:block;margin-bottom:4px">Name this town</label>
+            <input id="town-name-input" type="text" placeholder="Town"
+              style="width:100%;padding:4px 8px;border-radius:6px;border:1px solid #444;background:#1a1a2e;color:#fff;font-size:13px;outline:none"
+            />
+            <button id="town-name-save"
+              style="margin-top:6px;width:100%;padding:4px 0;border-radius:6px;border:none;background:#f43f5e;color:#fff;font-size:12px;font-weight:600;cursor:pointer">
+              Place Town
+            </button>
+          </div>`,
+        )
+        .openOn(map);
+
+      setTownDropMode(false);
+
+      setTimeout(() => {
+        const input = document.getElementById("town-name-input") as HTMLInputElement | null;
+        const btn = document.getElementById("town-name-save");
+        if (!input || !btn) return;
+        input.focus();
+
+        const save = () => {
+          const name = input.value.trim() || "Town";
+          fetch("/api/cluster-labels", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ adminCode, lat, lng, name }),
+          })
+            .then((r) => (r.ok ? r.json() : null))
+            .then((created) => {
+              if (created) useClusterLabelsStore.getState().upsertLabel(created);
+            })
+            .catch(() => {});
+          map.closePopup(popup);
+        };
+
+        btn.addEventListener("click", save);
+        input.addEventListener("keydown", (ev) => {
+          if (ev.key === "Enter") save();
+        });
+      }, 0);
+    },
+  });
 
   return null;
 }
@@ -512,6 +505,9 @@ function MapClickHandler() {
     click(e) {
       const { dropMode, openCompose } = usePinsStore.getState();
       const { spotDropMode, openSpotCompose } = useSpotsStore.getState();
+      const { townDropMode } = useClusterLabelsStore.getState();
+      // Town drop is handled by TownDropHandler; skip other handlers
+      if (townDropMode) return;
       if (spotDropMode) {
         openSpotCompose({ lat: e.latlng.lat, lng: e.latlng.lng });
       } else if (dropMode) {
@@ -554,9 +550,10 @@ function CursorEffect() {
   const map = useMap();
   const { dropMode } = usePinsStore();
   const { spotDropMode } = useSpotsStore();
+  const { townDropMode } = useClusterLabelsStore();
   useEffect(() => {
-    map.getContainer().style.cursor = dropMode || spotDropMode ? "crosshair" : "";
-  }, [map, dropMode, spotDropMode]);
+    map.getContainer().style.cursor = dropMode || spotDropMode || townDropMode ? "crosshair" : "";
+  }, [map, dropMode, spotDropMode, townDropMode]);
   return null;
 }
 
@@ -565,10 +562,11 @@ function reactionHash(pin: Pin): string {
   return `${pin.fireCount}|${pin.skullCount}|${pin.heartCount}|${pin.laughCount}|${pin.wowCount}`;
 }
 
-// Renders pin markers and handles clicks — hidden when zoomed out past CLUSTER_ZOOM_THRESHOLD
+// Renders pin markers — hides pins that belong to a town when zoomed out past threshold
 function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   const map = useMap();
   const { pins } = usePinsStore();
+  const { labels } = useClusterLabelsStore();
   const markersRef = useRef<Map<string, { marker: L.Marker; hash: string }>>(new Map());
   // Track which pins randomly got a title card (1 in 5 chance, persists until page reload)
   const titleCardRollsRef = useRef<Map<string, boolean>>(new Map());
@@ -586,28 +584,23 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
 
   useEffect(() => {
     const clustered = zoom < CLUSTER_ZOOM_THRESHOLD;
+    // When clustered, find which pins are captured by a town
+    const hiddenIds = clustered ? getClusteredPinIds(pins, labels) : new Set<string>();
 
-    // When clustered, remove all individual markers
-    if (clustered) {
-      for (const [id, entry] of markersRef.current) {
-        entry.marker.remove();
-        markersRef.current.delete(id);
-      }
-      return;
-    }
+    // Determine which pins should be visible
+    const visiblePins = clustered ? pins.filter((p) => !hiddenIds.has(p.id)) : pins;
+    const visibleIds = new Set(visiblePins.map((p) => p.id));
 
-    const currentIds = new Set(pins.map((p) => p.id));
-
-    // Remove stale markers
+    // Remove stale markers (pin gone, or now hidden by town)
     for (const [id, entry] of markersRef.current) {
-      if (!currentIds.has(id)) {
+      if (!visibleIds.has(id)) {
         entry.marker.remove();
         markersRef.current.delete(id);
       }
     }
 
-    // Add or update markers
-    for (const pin of pins) {
+    // Add or update visible markers
+    for (const pin of visiblePins) {
       const color = CATEGORY_COLORS[pin.category] ?? CATEGORY_COLORS.other;
       const hash = reactionHash(pin);
       const existing = markersRef.current.get(pin.id);
@@ -635,7 +628,7 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
         });
       markersRef.current.set(pin.id, { marker, hash });
     }
-  }, [pins, map, zoom]);
+  }, [pins, map, zoom, labels]);
 
   return null;
 }
@@ -737,10 +730,11 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
         <PinFetcher />
         <SpotFetcher />
         <ClusterLabelFetcher />
+        <TownDropHandler />
         <MapClickHandler />
         <CursorEffect />
         <ZoomToPin />
-        <ClusterLayer />
+        <TownClusterLayer />
         <MarkerLayer onPinClick={onPinClick} />
         <SpotMarkerLayer onSpotClick={onSpotClick} />
       </MapContainer>

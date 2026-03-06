@@ -11,6 +11,10 @@ type ClusterLabelsStore = {
   labels: ClusterLabel[];
   setLabels: (labels: ClusterLabel[]) => void;
   upsertLabel: (label: ClusterLabel) => void;
+
+  // Town drop mode (admin placing a town marker)
+  townDropMode: boolean;
+  setTownDropMode: (on: boolean) => void;
 };
 
 export const useClusterLabelsStore = create<ClusterLabelsStore>((set) => ({
@@ -26,4 +30,7 @@ export const useClusterLabelsStore = create<ClusterLabelsStore>((set) => ({
       }
       return { labels: [label, ...s.labels] };
     }),
+
+  townDropMode: false,
+  setTownDropMode: (townDropMode) => set({ townDropMode }),
 }));

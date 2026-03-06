@@ -9,6 +9,7 @@ import { PinDetail } from "@/components/PinDetail";
 import { AdminLock } from "@/components/AdminLock";
 import { SpotCompose } from "@/components/SpotCompose";
 import { SpotView } from "@/components/SpotView";
+import { useClusterLabelsStore } from "@/store/clusterLabels";
 import { useCallback, useState } from "react";
 
 const AppMap = dynamic(
@@ -22,6 +23,7 @@ export default function MapPage() {
   const [satelliteHintDismissed, setSatelliteHintDismissed] = useState(false);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
+  const { townDropMode } = useClusterLabelsStore();
 
   const handlePinClick = useCallback(
     (pin: Pin) => selectPin(pin),
@@ -205,6 +207,24 @@ export default function MapPage() {
             <button
               className="pointer-events-auto ml-2 text-white/40 hover:text-white transition"
               onClick={() => useSpotsStore.getState().setSpotDropMode(false)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Town drop mode banner ── */}
+      {townDropMode && (
+        <div className="pointer-events-none absolute top-20 left-1/2 z-20 -translate-x-1/2">
+          <div className="flex items-center gap-2 rounded-full border border-rose-400/30 bg-black/70 backdrop-blur-md px-5 py-2 text-sm text-rose-300">
+            <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M9.69 18.933l.003.001C9.89 19.02 10 19 10 19s.11.02.308-.066l.002-.001.006-.003.018-.008a5.741 5.741 0 0 0 .281-.14c.186-.096.446-.24.757-.433.62-.384 1.445-.966 2.274-1.765C15.302 15.088 17 12.567 17 9A7 7 0 1 0 3 9c0 3.567 1.698 6.088 3.354 7.584a13.731 13.731 0 0 0 2.757 1.966l.018.008.006.003ZM10 11.25a2.25 2.25 0 1 0 0-4.5 2.25 2.25 0 0 0 0 4.5Z" clipRule="evenodd" />
+            </svg>
+            Tap anywhere on the map to place a town
+            <button
+              className="pointer-events-auto ml-2 text-white/40 hover:text-white transition"
+              onClick={() => useClusterLabelsStore.getState().setTownDropMode(false)}
             >
               ✕
             </button>
