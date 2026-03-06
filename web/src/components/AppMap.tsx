@@ -220,6 +220,33 @@ function MapClickHandler() {
   return null;
 }
 
+// Zooms to a pin when selected, restores previous viewport when deselected
+function ZoomToPin() {
+  const map = useMap();
+  const { selectedPin } = usePinsStore();
+  const prevViewportRef = useRef<{ lat: number; lng: number; zoom: number } | null>(null);
+
+  useEffect(() => {
+    if (selectedPin) {
+      // Save current viewport before zooming in
+      const center = map.getCenter();
+      prevViewportRef.current = {
+        lat: center.lat,
+        lng: center.lng,
+        zoom: map.getZoom(),
+      };
+      map.flyTo([selectedPin.lat, selectedPin.lng], 17, { duration: 1 });
+    } else if (prevViewportRef.current) {
+      // Restore previous viewport when pin card is closed
+      const { lat, lng, zoom } = prevViewportRef.current;
+      map.flyTo([lat, lng], zoom, { duration: 1 });
+      prevViewportRef.current = null;
+    }
+  }, [selectedPin, map]);
+
+  return null;
+}
+
 // Crosshair cursor when drop mode is active
 function CursorEffect() {
   const map = useMap();
@@ -389,6 +416,7 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
         <SpotFetcher />
         <MapClickHandler />
         <CursorEffect />
+        <ZoomToPin />
         <MarkerLayer onPinClick={onPinClick} />
         <SpotMarkerLayer onSpotClick={onSpotClick} />
       </MapContainer>
