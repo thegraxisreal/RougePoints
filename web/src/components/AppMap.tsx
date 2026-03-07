@@ -235,7 +235,7 @@ function ZoomToPin() {
         lng: center.lng,
         zoom: map.getZoom(),
       };
-      map.flyTo([selectedPin.lat, selectedPin.lng], 17, { duration: 1 });
+      map.flyTo([selectedPin.lat, selectedPin.lng], 17, { duration: 1.4, easeLinearity: 0.5 });
     } else if (prevViewportRef.current) {
       // Restore previous viewport when pin card is closed
       const { lat, lng, zoom } = prevViewportRef.current;
@@ -403,6 +403,8 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
             key="satellite"
             url={tileUrl}
             maxZoom={19}
+            keepBuffer={4}
+            updateWhenZooming={false}
           />
         ) : (
           <TileLayer
@@ -410,6 +412,8 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
             url={tileUrl}
             subdomains="abcd"
             maxZoom={20}
+            keepBuffer={4}
+            updateWhenZooming={false}
           />
         )}
         <PinFetcher />
