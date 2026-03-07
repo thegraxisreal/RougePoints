@@ -216,7 +216,7 @@ export default function MapPage() {
       {!composeOpen && !spotComposeOpen && (
         <button
           onClick={() => setDropMode(!dropMode)}
-          className={`absolute bottom-8 right-6 z-20 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl transition-all active:scale-95 ${
+          className={`absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 rounded-full px-5 py-3 text-sm font-semibold shadow-xl transition-all active:scale-95 ${
             dropMode
               ? "bg-amber-400/20 border border-amber-400/50 text-amber-300"
               : "bg-amber-400 text-black hover:bg-amber-300 shadow-amber-400/30"
