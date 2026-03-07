@@ -454,6 +454,87 @@ export default function Home() {
       </section>
 
       {/* ════════════════════════════════
+          TAGLINE SECTION
+      ════════════════════════════════ */}
+      <section className="relative flex min-h-[85vh] items-center justify-center overflow-hidden py-28">
+        {/* Ambient glow blobs */}
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 h-[600px] w-[600px] rounded-full opacity-20"
+            style={{ background: "radial-gradient(circle, rgba(251,191,36,0.18) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute left-[20%] top-[30%] h-72 w-72 rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, rgba(251,191,36,0.3) 0%, transparent 70%)" }}
+          />
+          <div
+            className="absolute right-[15%] bottom-[25%] h-56 w-56 rounded-full opacity-10"
+            style={{ background: "radial-gradient(circle, rgba(167,139,250,0.25) 0%, transparent 70%)" }}
+          />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-5xl px-4 sm:px-6 text-center">
+          {/* Eyebrow */}
+          <p
+            className="mb-8 text-[13px] font-medium uppercase tracking-[0.25em] text-amber-400/50"
+            data-animate
+          >
+            The short version
+          </p>
+
+          {/* Main statement */}
+          <h2
+            className="font-display text-5xl sm:text-7xl md:text-8xl tracking-tight leading-[0.95]"
+            data-animate
+            data-delay="1"
+          >
+            It&rsquo;s like a{" "}
+            <em className="text-gradient-amber not-italic">treasure hunt,</em>
+            <br />
+            <em className="text-white/30 not-italic">time capsule,</em>
+            <br />
+            and inside joke
+            <br />
+            all in one.
+          </h2>
+
+          {/* Three pillars */}
+          <div
+            className="mt-16 grid gap-4 sm:grid-cols-3 max-w-3xl mx-auto"
+            data-animate
+            data-delay="2"
+          >
+            {[
+              {
+                icon: "🗺️",
+                label: "Treasure Hunt",
+                desc: "Discover hidden pins from people who've been exactly where you are.",
+              },
+              {
+                icon: "⏳",
+                label: "Time Capsule",
+                desc: "Stories pinned forever to the exact coordinates where they happened.",
+              },
+              {
+                icon: "😂",
+                label: "Inside Joke",
+                desc: "The bits that only make sense to the people who were there.",
+              },
+            ].map((item) => (
+              <div
+                key={item.label}
+                className="rounded-2xl border border-white/[0.06] bg-white/[0.02] px-6 py-6 card-hover"
+              >
+                <div className="mb-3 text-3xl">{item.icon}</div>
+                <p className="text-sm font-semibold text-white/70 mb-1">{item.label}</p>
+                <p className="text-[13px] text-white/35 leading-relaxed">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════
           HOW IT WORKS
       ════════════════════════════════ */}
       <TopoDivider />
