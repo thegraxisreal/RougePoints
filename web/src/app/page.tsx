@@ -2,7 +2,7 @@
 
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /* Leaflet must be client-only (no SSR) */
 const LandingMap = dynamic(
@@ -199,6 +199,92 @@ function TopoDivider() {
         />
       </svg>
     </div>
+  );
+}
+
+/* ── Logo Prompt Section ── */
+
+const PROFILE_PHOTO_PROMPT =
+  "A square profile photo icon for a dark urban location-based social app called RoguePoints. " +
+  "Center: a single glowing map pin with a warm amber-to-rose gradient, soft inner light halo. " +
+  "Background: near-black (#0a0a0f) with a subtle film grain texture and a faint radial amber glow behind the pin. " +
+  "Style: minimal, geometric, noir city mood. No text, no extra icons. " +
+  "Aspect ratio 1:1, 512×512, ready for use as a social media profile photo or app icon.";
+
+function LogoPromptSection() {
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    navigator.clipboard.writeText(PROFILE_PHOTO_PROMPT).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  return (
+    <section className="py-16 sm:py-24">
+      <div className="mx-auto max-w-3xl px-4 sm:px-6" data-animate>
+        {/* Label */}
+        <p className="text-[13px] font-medium uppercase tracking-[0.2em] text-amber-400/60 mb-3">
+          Brand Assets
+        </p>
+        <h2 className="font-display text-3xl sm:text-4xl tracking-tight mb-2">
+          Generate your profile photo
+        </h2>
+        <p className="text-white/40 text-sm mb-8">
+          Paste this prompt into Midjourney, DALL·E, or Firefly to create the
+          RoguePoints profile image.
+        </p>
+
+        {/* Prompt card */}
+        <div className="relative rounded-2xl border border-white/[0.08] bg-white/[0.03] p-6 sm:p-8">
+          {/* Subtle amber glow in corner */}
+          <div
+            className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle, rgba(251,191,36,0.10) 0%, transparent 70%)",
+            }}
+          />
+
+          {/* Prompt label */}
+          <div className="mb-4 flex items-center gap-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-400 pulse-soft" />
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-amber-300/70">
+              Profile Photo — Prompt #1
+            </span>
+          </div>
+
+          {/* Prompt text */}
+          <p className="font-mono text-sm leading-relaxed text-white/70 select-all">
+            {PROFILE_PHOTO_PROMPT}
+          </p>
+
+          {/* Copy button */}
+          <button
+            onClick={handleCopy}
+            className="mt-6 inline-flex items-center gap-2 rounded-full border border-white/[0.10] bg-white/[0.05] px-5 py-2.5 text-xs font-semibold uppercase tracking-widest text-white/60 transition hover:border-amber-400/40 hover:text-amber-300 active:scale-[.97]"
+          >
+            {copied ? (
+              <>
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5 text-amber-400" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="2,8 6,12 14,4" />
+                </svg>
+                Copied!
+              </>
+            ) : (
+              <>
+                <svg viewBox="0 0 16 16" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <rect x="5" y="5" width="9" height="9" rx="1.5" />
+                  <path d="M11 5V3.5A1.5 1.5 0 0 0 9.5 2h-6A1.5 1.5 0 0 0 2 3.5v6A1.5 1.5 0 0 0 3.5 11H5" />
+                </svg>
+                Copy prompt
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -954,6 +1040,11 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      {/* ════════════════════════════════
+          LOGO PROMPT
+      ════════════════════════════════ */}
+      <LogoPromptSection />
 
       {/* ════════════════════════════════
           BOTTOM CTA
