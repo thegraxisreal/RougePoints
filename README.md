@@ -1,4 +1,3 @@
-# RougePoints
 # RoguePoints
 
 > **Every place has a story. Every story has a place.**
