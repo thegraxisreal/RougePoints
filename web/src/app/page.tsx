@@ -1053,7 +1053,7 @@ export default function Home() {
             <a href="#" className="text-white/35 hover:text-amber-300/70 transition cursor-pin">
               Terms
             </a>
-            <a href="#" className="text-white/35 hover:text-amber-300/70 transition cursor-pin">
+            <a href="/privacy" className="text-white/35 hover:text-amber-300/70 transition cursor-pin">
               Privacy
             </a>
             <a href="#" className="text-white/35 hover:text-amber-300/70 transition cursor-pin">
