@@ -32,6 +32,10 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
+type MediaItem = NonNullable<Pin["media"]>[number];
+
+const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_URL ?? "";
+
 export function PinDetail() {
   const { selectedPin, selectPin, removePin, updatePin } = usePinsStore();
   const { isSignedIn } = useUser();
@@ -41,6 +45,8 @@ export function PinDetail() {
   // Track which reactions the current user has toggled (kind -> true/false)
   const [myReactions, setMyReactions] = useState<Record<string, boolean>>({});
   const [reactingKind, setReactingKind] = useState<string | null>(null);
+  // Local media state — populated directly from fetch, not via store re-render chain
+  const [displayMedia, setDisplayMedia] = useState<MediaItem[]>([]);
 
   useEffect(() => {
     if (!isSignedIn) return;
@@ -50,19 +56,31 @@ export function PinDetail() {
       .catch(() => setCurrentUserId(null));
   }, [isSignedIn]);
 
-  // Reset state and re-fetch pin data (with media) when a different pin is selected
+  // Re-fetch fresh pin data (with media) whenever a different pin is selected
   useEffect(() => {
     setDeleteError(null);
     setMyReactions({});
-    if (selectedPin?.id) {
-      fetch(`/api/pins/${selectedPin.id}`)
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (data) updatePin(data.id, data);
-        })
-        .catch(() => {});
+
+    if (!selectedPin?.id) {
+      setDisplayMedia([]);
+      return;
     }
-  }, [selectedPin?.id, updatePin]);
+
+    // Seed with whatever the store already has (may be empty on first open)
+    setDisplayMedia(selectedPin.media ?? []);
+
+    fetch(`/api/pins/${selectedPin.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        // Update the store so the map marker / title card also refreshes
+        updatePin(data.id, data);
+        // Update local display state directly — don't rely on Zustand re-render
+        setDisplayMedia(data.media ?? []);
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPin?.id]);
 
   const handleReaction = useCallback(async (kind: string, countKey: string) => {
     if (!selectedPin || !isSignedIn || reactingKind) return;
@@ -201,13 +219,13 @@ export function PinDetail() {
             </div>
 
             {/* Images */}
-            {selectedPin.media && selectedPin.media.length > 0 && (
+            {displayMedia.length > 0 && S3_BASE && (
               <div className="mb-5 -mx-1">
                 <div className="flex gap-2 overflow-x-auto px-1 pb-2 scrollbar-hide">
-                  {selectedPin.media.map((m) => (
+                  {displayMedia.map((m) => (
                     <img
                       key={m.id}
-                      src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${m.s3Key}`}
+                      src={`${S3_BASE}/${m.s3Key}`}
                       alt=""
                       className="h-48 max-h-64 w-auto rounded-xl object-cover border border-white/[0.06] flex-shrink-0"
                     />
