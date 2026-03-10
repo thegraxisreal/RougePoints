@@ -192,6 +192,22 @@ export function PinDetail() {
               </span>
             </div>
 
+            {/* Images */}
+            {selectedPin.media && selectedPin.media.length > 0 && (
+              <div className="mb-5 -mx-1">
+                <div className="flex gap-2 overflow-x-auto px-1 pb-2 scrollbar-hide">
+                  {selectedPin.media.map((m) => (
+                    <img
+                      key={m.id}
+                      src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${m.s3Key}`}
+                      alt=""
+                      className="h-48 max-h-64 w-auto rounded-xl object-cover border border-white/[0.06] flex-shrink-0"
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
             {deleteError && (
               <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2 mb-4">{deleteError}</p>
             )}
