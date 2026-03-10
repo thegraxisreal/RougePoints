@@ -50,13 +50,23 @@ function buildEmojiRing(pin: Pin): string {
     .join("");
 }
 
+const S3_PUBLIC_URL = process.env.NEXT_PUBLIC_S3_PUBLIC_URL ?? "";
+
 function makeTitleCard(pin: Pin): string {
   const title = pin.title.length > 60 ? pin.title.slice(0, 57) + "..." : pin.title;
   const author = pin.author?.handle ? `@${pin.author.handle}` : "";
   // Escape HTML entities
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-  return `<div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;background:rgba(20,20,30,0.92);color:#fff;border-radius:10px;padding:6px 10px;font-size:11px;line-height:1.3;white-space:nowrap;max-width:200px;overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.4);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.1)">
-    <div style="overflow:hidden;text-overflow:ellipsis;font-weight:600">${esc(title)}</div>
+
+  // Check for a ready image
+  const firstImage = pin.media?.find((m) => m.s3Key);
+  const imageHtml = firstImage && S3_PUBLIC_URL
+    ? `<div style="margin:-6px -10px 6px -10px;overflow:hidden;border-radius:10px 10px 0 0"><img src="${esc(`${S3_PUBLIC_URL}/${firstImage.s3Key}`)}" style="display:block;width:100%;height:80px;object-fit:cover" /></div>`
+    : "";
+  const cardWidth = firstImage && S3_PUBLIC_URL ? "width:180px;" : "max-width:200px;";
+
+  return `<div style="position:absolute;bottom:100%;left:50%;transform:translateX(-50%);margin-bottom:6px;background:rgba(20,20,30,0.92);color:#fff;border-radius:10px;padding:6px 10px;font-size:11px;line-height:1.3;white-space:nowrap;${cardWidth}overflow:hidden;text-overflow:ellipsis;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.4);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,0.1)">
+    ${imageHtml}<div style="overflow:hidden;text-overflow:ellipsis;font-weight:600">${esc(title)}</div>
     ${author ? `<div style="opacity:0.6;font-size:10px;margin-top:1px">${esc(author)}</div>` : ""}
     <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:5px solid rgba(20,20,30,0.92)"></div>
   </div>`;
@@ -258,9 +268,10 @@ function CursorEffect() {
   return null;
 }
 
-// Build a simple string hash of a pin's reaction counts for change detection
-function reactionHash(pin: Pin): string {
-  return `${pin.fireCount}|${pin.skullCount}|${pin.heartCount}|${pin.laughCount}|${pin.wowCount}`;
+// Build a simple string hash of a pin's visual state for change detection
+function pinVisualHash(pin: Pin): string {
+  const mediaCount = pin.media?.length ?? 0;
+  return `${pin.fireCount}|${pin.skullCount}|${pin.heartCount}|${pin.laughCount}|${pin.wowCount}|m${mediaCount}`;
 }
 
 // Renders pin markers and handles clicks
@@ -287,7 +298,7 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
     // Add or update markers
     for (const pin of pins) {
       const color = CATEGORY_COLORS[pin.category] ?? CATEGORY_COLORS.other;
-      const hash = reactionHash(pin);
+      const hash = pinVisualHash(pin);
       const existing = markersRef.current.get(pin.id);
 
       // Roll once per pin per page load for title card visibility

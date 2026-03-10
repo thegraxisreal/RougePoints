@@ -50,11 +50,19 @@ export function PinDetail() {
       .catch(() => setCurrentUserId(null));
   }, [isSignedIn]);
 
-  // Reset state when a different pin is selected
+  // Reset state and re-fetch pin data (with media) when a different pin is selected
   useEffect(() => {
     setDeleteError(null);
     setMyReactions({});
-  }, [selectedPin?.id]);
+    if (selectedPin?.id) {
+      fetch(`/api/pins/${selectedPin.id}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data) updatePin(data.id, data);
+        })
+        .catch(() => {});
+    }
+  }, [selectedPin?.id, updatePin]);
 
   const handleReaction = useCallback(async (kind: string, countKey: string) => {
     if (!selectedPin || !isSignedIn || reactingKind) return;

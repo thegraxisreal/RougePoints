@@ -15,7 +15,7 @@ const CATEGORIES = [
 type UploadState = "idle" | "uploading" | "done" | "error";
 
 export function ComposeModal() {
-  const { composeOpen, pendingCoords, closeCompose, addPin } = usePinsStore();
+  const { composeOpen, pendingCoords, closeCompose, addPin, updatePin } = usePinsStore();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("funny");
   const [loading, setLoading] = useState(false);
@@ -79,6 +79,13 @@ export function ComposeModal() {
         body: JSON.stringify(dims),
       });
       if (!completeRes.ok) throw new Error("Failed to finalize upload");
+
+      // 5. Refresh pin data in the store so media shows on map/detail
+      const pinRes = await fetch(`/api/pins/${pinId}`);
+      if (pinRes.ok) {
+        const freshPin = await pinRes.json();
+        updatePin(pinId, freshPin);
+      }
 
       setUploadState("done");
     } catch {

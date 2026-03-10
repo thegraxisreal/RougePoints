@@ -96,7 +96,6 @@ export async function POST(req: NextRequest) {
     Bucket: process.env.S3_BUCKET!,
     Key: s3Key,
     ContentType: mimeType,
-    ContentLength: MAX_SIZE, // used in policy condition
   });
 
   const uploadUrl = await getSignedUrl(s3, command, {
