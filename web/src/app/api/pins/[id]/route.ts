@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { withMediaUrl } from "@/lib/s3";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -24,7 +25,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json(pin);
+  return NextResponse.json({
+    ...pin,
+    media: pin.media.map(withMediaUrl),
+  });
 }
 
 // ─── DELETE /api/pins/[id] — requires auth, must be the author ───────────────

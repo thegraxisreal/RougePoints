@@ -14,7 +14,7 @@ export type Pin = {
   wowCount: number;
   createdAt: string;
   author: { handle: string; avatarUrl: string | null };
-  media?: { id: string; s3Key: string; mimeType: string; width: number | null; height: number | null }[];
+  media?: { id: string; s3Key: string; url: string | null; mimeType: string; width: number | null; height: number | null }[];
 };
 
 type PinsStore = {

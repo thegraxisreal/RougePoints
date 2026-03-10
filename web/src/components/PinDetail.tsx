@@ -34,8 +34,6 @@ function timeAgo(dateStr: string): string {
 
 type MediaItem = NonNullable<Pin["media"]>[number];
 
-const S3_BASE = process.env.NEXT_PUBLIC_S3_PUBLIC_URL ?? "";
-
 export function PinDetail() {
   const { selectedPin, selectPin, removePin, updatePin } = usePinsStore();
   const { isSignedIn } = useUser();
@@ -219,17 +217,19 @@ export function PinDetail() {
             </div>
 
             {/* Images */}
-            {displayMedia.length > 0 && S3_BASE && (
+            {displayMedia.filter((m) => m.url).length > 0 && (
               <div className="mb-5 -mx-1">
                 <div className="flex gap-2 overflow-x-auto px-1 pb-2 scrollbar-hide">
-                  {displayMedia.map((m) => (
-                    <img
-                      key={m.id}
-                      src={`${S3_BASE}/${m.s3Key}`}
-                      alt=""
-                      className="h-48 max-h-64 w-auto rounded-xl object-cover border border-white/[0.06] flex-shrink-0"
-                    />
-                  ))}
+                  {displayMedia.map((m) =>
+                    m.url ? (
+                      <img
+                        key={m.id}
+                        src={m.url}
+                        alt=""
+                        className="h-48 max-h-64 w-auto rounded-xl object-cover border border-white/[0.06] flex-shrink-0"
+                      />
+                    ) : null
+                  )}
                 </div>
               </div>
             )}

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { withMediaUrl } from "@/lib/s3";
 
 // ─── GET /api/pins?swLat=&swLng=&neLat=&neLng= ───────────────────────────────
 // Public — returns visible pins inside a map bounding box.
@@ -49,7 +50,13 @@ export async function GET(req: NextRequest) {
     take: 500,
   });
 
-  return NextResponse.json(pins);
+  // Augment media with public URLs
+  const result = (pins as Array<Record<string, unknown> & { media: Array<{ s3Key: string }> }>).map((pin) => ({
+    ...pin,
+    media: pin.media.map(withMediaUrl),
+  }));
+
+  return NextResponse.json(result);
 }
 
 // ─── POST /api/pins ───────────────────────────────────────────────────────────
