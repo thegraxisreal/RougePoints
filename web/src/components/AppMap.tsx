@@ -103,16 +103,20 @@ function makeClusterIcon(count: number, color: string): L.DivIcon {
     <circle cx="15" cy="15" r="6.5" fill="white" opacity="0.92"/>
   </svg>`;
 
-  const html = `<div style="position:relative;width:30px;height:38px;display:flex;align-items:center;justify-content:center">
-    ${svg}
-    <div style="position:absolute;color:${color};font-weight:700;font-size:${fontSize}px;line-height:1;text-shadow:0 1px 1px rgba(255,255,255,0.8)">${count}</div>
+  const pluralText = count === 1 ? "pin" : "pins";
+  const html = `<div style="position:absolute;width:60px;display:flex;flex-direction:column;align-items:center;left:-15px;top:-18px">
+    <div style="background:rgba(20,20,30,0.92);color:white;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(4px);">${count} ${pluralText}</div>
+    <div style="position:relative;width:30px;height:38px;display:flex;align-items:center;justify-content:center;margin-top:2px">
+      ${svg}
+      <div style="position:absolute;color:${color};font-weight:700;font-size:${fontSize}px;line-height:1;text-shadow:0 1px 1px rgba(255,255,255,0.8)">${count}</div>
+    </div>
   </div>`;
 
   return L.divIcon({
     html,
     className: "",
-    iconSize: [30, 38],
-    iconAnchor: [15, 38],
+    iconSize: [60, 64],
+    iconAnchor: [30, 64],
   });
 }
 
