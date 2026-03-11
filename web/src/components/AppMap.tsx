@@ -154,6 +154,26 @@ function makeSpotIcon(type: string, hasPins: boolean = false): L.DivIcon {
   });
 }
 
+// Syncs the current map viewport (zoom, center) back to the viewport store
+function MapViewportSyncr() {
+  const map = useMap();
+  const setViewport = useViewportStore((state) => state.setViewport);
+
+  useMapEvents({
+    move: () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      setViewport({
+        latitude: center.lat,
+        longitude: center.lng,
+        zoom,
+      });
+    },
+  });
+
+  return null;
+}
+
 // Fetches pins from the API whenever the map viewport changes
 function PinFetcher() {
   const map = useMap();
@@ -501,6 +521,7 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
             updateWhenZooming={false}
           />
         )}
+        <MapViewportSyncr />
         <PinFetcher />
         <SpotFetcher />
         <MapClickHandler />
