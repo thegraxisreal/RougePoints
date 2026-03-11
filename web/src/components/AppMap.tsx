@@ -367,7 +367,7 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
         markersRef.current.set(pin.id, { marker, hash });
       }
     }
-  }, [markerData, map, zoom, getMarkerData]);
+  }, [map, zoom, getMarkerData]);
 
   return null;
 }
@@ -444,7 +444,7 @@ function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void })
         markersRef.current.set(spot.id, { marker, hash });
       }
     }
-  }, [markerData, map, zoom, getMarkerData]);
+  }, [map, zoom, getMarkerData]);
 
   return null;
 }
