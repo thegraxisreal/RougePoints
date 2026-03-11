@@ -89,25 +89,30 @@ function makePinIcon(color: string, pin?: Pin, showTitleCard?: boolean): L.DivIc
 }
 
 function makeClusterIcon(count: number, color: string): L.DivIcon {
-  const size = count > 100 ? 44 : count > 50 ? 40 : 36;
-  const fontSize = count > 100 ? 18 : count > 50 ? 16 : 14;
-  const fontWeight = count > 100 ? 700 : 600;
+  const fontSize = count > 100 ? 16 : count > 50 ? 14 : 12;
+  const filterId = `cluster-f${color.replace("#", "")}`;
 
-  const svg = `<svg viewBox="0 0 ${size} ${size}" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" fill="${color}" opacity="0.85"/>
-    <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 1}" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
+  const svg = `<svg viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="${filterId}" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="${color}" flood-opacity="0.65"/>
+      </filter>
+    </defs>
+    <path d="M15 0C6.72 0 0 6.72 0 15c0 11.25 13.5 21.75 14.25 22.31.22.19.53.19.75.19s.53 0 .75-.19C16.5 36.75 30 26.25 30 15 30 6.72 23.28 0 15 0z"
+      fill="${color}" filter="url(#${filterId})"/>
+    <circle cx="15" cy="15" r="6.5" fill="white" opacity="0.92"/>
   </svg>`;
 
-  const html = `<div style="position:relative;width:${size}px;height:${size}px;display:flex;align-items:center;justify-content:center">
+  const html = `<div style="position:relative;width:30px;height:38px;display:flex;align-items:center;justify-content:center">
     ${svg}
-    <div style="position:absolute;color:white;font-weight:${fontWeight};font-size:${fontSize}px;line-height:1;text-shadow:0 1px 2px rgba(0,0,0,0.5)">${count}</div>
+    <div style="position:absolute;color:${color};font-weight:700;font-size:${fontSize}px;line-height:1;text-shadow:0 1px 1px rgba(255,255,255,0.8)">${count}</div>
   </div>`;
 
   return L.divIcon({
     html,
     className: "",
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    iconSize: [30, 38],
+    iconAnchor: [15, 38],
   });
 }
 
