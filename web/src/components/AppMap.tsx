@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import { usePinsStore, Pin } from "@/store/pins";
 import { useSpotsStore, Spot } from "@/store/spots";
 import { useViewportStore } from "@/store/viewport";
+import { type PinMarkerData, type SpotMarkerData } from "@/lib/clustering";
 
 const CATEGORY_COLORS: Record<string, string> = {
   funny: "#fbbf24",
@@ -87,6 +88,38 @@ function makePinIcon(color: string, pin?: Pin, showTitleCard?: boolean): L.DivIc
   });
 }
 
+function makeClusterIcon(count: number, color: string): L.DivIcon {
+  const fontSize = count > 100 ? 16 : count > 50 ? 14 : 12;
+  const filterId = `cluster-f${color.replace("#", "")}`;
+
+  const svg = `<svg viewBox="0 0 30 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="${filterId}" x="-50%" y="-50%" width="200%" height="200%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="${color}" flood-opacity="0.65"/>
+      </filter>
+    </defs>
+    <path d="M15 0C6.72 0 0 6.72 0 15c0 11.25 13.5 21.75 14.25 22.31.22.19.53.19.75.19s.53 0 .75-.19C16.5 36.75 30 26.25 30 15 30 6.72 23.28 0 15 0z"
+      fill="${color}" filter="url(#${filterId})"/>
+    <circle cx="15" cy="15" r="6.5" fill="white" opacity="0.92"/>
+  </svg>`;
+
+  const pluralText = count === 1 ? "pin" : "pins";
+  const html = `<div style="position:absolute;width:60px;display:flex;flex-direction:column;align-items:center;left:-15px;top:-18px">
+    <div style="background:rgba(20,20,30,0.92);color:white;padding:4px 8px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.1);backdrop-filter:blur(4px);">${count} ${pluralText}</div>
+    <div style="position:relative;width:30px;height:38px;display:flex;align-items:center;justify-content:center;margin-top:2px">
+      ${svg}
+      <div style="position:absolute;color:${color};font-weight:700;font-size:${fontSize}px;line-height:1;text-shadow:0 1px 1px rgba(255,255,255,0.8)">${count}</div>
+    </div>
+  </div>`;
+
+  return L.divIcon({
+    html,
+    className: "",
+    iconSize: [60, 64],
+    iconAnchor: [30, 64],
+  });
+}
+
 const SPOT_SVGS: Record<string, string> = {
   school: `<svg viewBox="0 0 40 44" fill="none" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -128,6 +161,26 @@ function makeSpotIcon(type: string, hasPins: boolean = false): L.DivIcon {
     iconSize: [40, 44],
     iconAnchor: [20, 44],
   });
+}
+
+// Syncs the current map viewport (zoom, center) back to the viewport store
+function MapViewportSyncr() {
+  const map = useMap();
+  const setViewport = useViewportStore((state) => state.setViewport);
+
+  useMapEvents({
+    move: () => {
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      setViewport({
+        latitude: center.lat,
+        longitude: center.lng,
+        zoom,
+      });
+    },
+  });
+
+  return null;
 }
 
 // Fetches pins from the API whenever the map viewport changes
@@ -266,15 +319,17 @@ function reactionHash(pin: Pin): string {
 // Renders pin markers and handles clicks
 function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   const map = useMap();
-  const { pins } = usePinsStore();
-  const markersRef = useRef<Map<string, { marker: L.Marker; hash: string }>>(new Map());
+  const { zoom } = useViewportStore();
+  const { getMarkerData } = usePinsStore();
+  const markersRef = useRef<Map<string, { marker: L.Marker; hash?: string }>>(new Map());
   // Track which pins randomly got a title card (1 in 5 chance, persists until page reload)
   const titleCardRollsRef = useRef<Map<string, boolean>>(new Map());
   const onPinClickRef = useRef(onPinClick);
   onPinClickRef.current = onPinClick;
 
   useEffect(() => {
-    const currentIds = new Set(pins.map((p) => p.id));
+    const markerData = getMarkerData(zoom);
+    const currentIds = new Set(markerData.map((m) => m.id));
 
     // Remove stale markers
     for (const [id, entry] of markersRef.current) {
@@ -285,35 +340,63 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
     }
 
     // Add or update markers
-    for (const pin of pins) {
-      const color = CATEGORY_COLORS[pin.category] ?? CATEGORY_COLORS.other;
-      const hash = reactionHash(pin);
-      const existing = markersRef.current.get(pin.id);
+    for (const item of markerData) {
+      if (item.isCluster) {
+        // Render cluster marker
+        const existing = markersRef.current.get(item.id);
 
-      // Roll once per pin per page load for title card visibility
-      if (!titleCardRollsRef.current.has(pin.id)) {
-        titleCardRollsRef.current.set(pin.id, Math.random() < 0.2);
-      }
-      const showTitleCard = titleCardRollsRef.current.get(pin.id)!;
-
-      if (existing) {
-        // Update icon if reactions changed
-        if (existing.hash !== hash) {
-          existing.marker.setIcon(makePinIcon(color, pin, showTitleCard));
-          existing.hash = hash;
+        if (existing) {
+          // Update if count changed
+          if (existing.hash !== String(item.count)) {
+            existing.marker.setIcon(makeClusterIcon(item.count, item.avgColor));
+            existing.hash = String(item.count);
+          }
+          continue;
         }
-        continue;
-      }
 
-      const marker = L.marker([pin.lat, pin.lng], { icon: makePinIcon(color, pin, showTitleCard) })
-        .addTo(map)
-        .on("click", (e) => {
-          L.DomEvent.stopPropagation(e);
-          onPinClickRef.current(pin);
-        });
-      markersRef.current.set(pin.id, { marker, hash });
+        const marker = L.marker([item.lat, item.lng], {
+          icon: makeClusterIcon(item.count, item.avgColor),
+        })
+          .addTo(map)
+          .on("click", (e) => {
+            L.DomEvent.stopPropagation(e);
+            // Zoom into cluster bounds
+            const bounds = L.latLngBounds(item.pins.map((p) => [p.lat, p.lng]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+          });
+        markersRef.current.set(item.id, { marker, hash: String(item.count) });
+      } else {
+        // Render individual pin marker
+        const pin = item.pin;
+        const color = CATEGORY_COLORS[pin.category] ?? CATEGORY_COLORS.other;
+        const hash = reactionHash(pin);
+        const existing = markersRef.current.get(pin.id);
+
+        // Roll once per pin per page load for title card visibility
+        if (!titleCardRollsRef.current.has(pin.id)) {
+          titleCardRollsRef.current.set(pin.id, Math.random() < 0.2);
+        }
+        const showTitleCard = titleCardRollsRef.current.get(pin.id)!;
+
+        if (existing) {
+          // Update icon if reactions changed
+          if (existing.hash !== hash) {
+            existing.marker.setIcon(makePinIcon(color, pin, showTitleCard));
+            existing.hash = hash;
+          }
+          continue;
+        }
+
+        const marker = L.marker([pin.lat, pin.lng], { icon: makePinIcon(color, pin, showTitleCard) })
+          .addTo(map)
+          .on("click", (e) => {
+            L.DomEvent.stopPropagation(e);
+            onPinClickRef.current(pin);
+          });
+        markersRef.current.set(pin.id, { marker, hash });
+      }
     }
-  }, [pins, map]);
+  }, [map, zoom, getMarkerData]);
 
   return null;
 }
@@ -321,13 +404,15 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
 // Renders spot markers with a custom building SVG and a dot if the spot has stories
 function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void }) {
   const map = useMap();
-  const { spots } = useSpotsStore();
-  const markersRef = useRef<Map<string, { marker: L.Marker; pinCount: number }>>(new Map());
+  const { zoom } = useViewportStore();
+  const { getMarkerData } = useSpotsStore();
+  const markersRef = useRef<Map<string, { marker: L.Marker; hash?: string }>>(new Map());
   const onSpotClickRef = useRef(onSpotClick);
   onSpotClickRef.current = onSpotClick;
 
   useEffect(() => {
-    const currentIds = new Set(spots.map((s) => s.id));
+    const markerData = getMarkerData(zoom);
+    const currentIds = new Set(markerData.map((m) => m.id));
 
     for (const [id, { marker }] of markersRef.current) {
       if (!currentIds.has(id)) {
@@ -336,30 +421,59 @@ function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void })
       }
     }
 
-    for (const spot of spots) {
-      const pinCount = spot._count?.pins ?? 0;
-      const existing = markersRef.current.get(spot.id);
+    for (const item of markerData) {
+      if (item.isCluster) {
+        // Render spot cluster marker
+        const existing = markersRef.current.get(item.id);
 
-      // Skip if marker already exists with the same pin count
-      if (existing && existing.pinCount === pinCount) continue;
+        if (existing) {
+          // Update if count changed
+          if (existing.hash !== String(item.count)) {
+            existing.marker.setIcon(makeClusterIcon(item.count, item.avgColor));
+            existing.hash = String(item.count);
+          }
+          continue;
+        }
 
-      // Remove outdated marker so we can replace it
-      if (existing) {
-        existing.marker.remove();
-        markersRef.current.delete(spot.id);
+        const marker = L.marker([item.lat, item.lng], {
+          icon: makeClusterIcon(item.count, item.avgColor),
+        })
+          .addTo(map)
+          .on("click", (e) => {
+            L.DomEvent.stopPropagation(e);
+            // Zoom into cluster bounds
+            const bounds = L.latLngBounds(item.spots.map((s) => [s.lat, s.lng]));
+            map.fitBounds(bounds, { padding: [50, 50] });
+          });
+        markersRef.current.set(item.id, { marker, hash: String(item.count) });
+      } else {
+        // Render individual spot marker
+        const spot = item.spot;
+        const pinCount = spot._count?.pins ?? 0;
+        const hash = `${pinCount}`;
+        const existing = markersRef.current.get(spot.id);
+
+        // Skip if marker already exists with the same pin count
+        if (existing && existing.hash === hash) continue;
+
+        // Remove outdated marker so we can replace it
+        if (existing) {
+          existing.marker.remove();
+          markersRef.current.delete(spot.id);
+        }
+
+        const marker = L.marker([spot.lat, spot.lng], {
+          icon: makeSpotIcon(spot.type, pinCount > 0),
+        })
+          .addTo(map)
+          .on("click", (e) => {
+            L.DomEvent.stopPropagation(e);
+            onSpotClickRef.current(spot);
+          });
+        markersRef.current.set(spot.id, { marker, hash });
       }
-
-      const marker = L.marker([spot.lat, spot.lng], {
-        icon: makeSpotIcon(spot.type, pinCount > 0),
-      })
-        .addTo(map)
-        .on("click", (e) => {
-          L.DomEvent.stopPropagation(e);
-          onSpotClickRef.current(spot);
-        });
-      markersRef.current.set(spot.id, { marker, pinCount });
     }
-  }, [spots, map]);
+  }, [map, zoom, getMarkerData]);
 
   return null;
 }
@@ -416,6 +530,7 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
             updateWhenZooming={false}
           />
         )}
+        <MapViewportSyncr />
         <PinFetcher />
         <SpotFetcher />
         <MapClickHandler />

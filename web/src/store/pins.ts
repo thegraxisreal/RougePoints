@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getClusteredPins, type PinMarkerData, PIN_CLUSTER_ZOOM } from "@/lib/clustering";
 
 export type Pin = {
   id: string;
@@ -22,6 +23,8 @@ type PinsStore = {
   dropMode: boolean;
   pendingCoords: { lat: number; lng: number } | null;
   composeOpen: boolean;
+  clusterZoomThreshold: number;
+  getMarkerData: (zoom: number) => PinMarkerData[];
   setPins: (pins: Pin[]) => void;
   addPin: (pin: Pin) => void;
   removePin: (id: string) => void;
@@ -33,12 +36,14 @@ type PinsStore = {
   closeCompose: () => void;
 };
 
-export const usePinsStore = create<PinsStore>((set) => ({
+export const usePinsStore = create<PinsStore>((set, get) => ({
   pins: [],
   selectedPin: null,
   dropMode: false,
   pendingCoords: null,
   composeOpen: false,
+  clusterZoomThreshold: PIN_CLUSTER_ZOOM,
+  getMarkerData: (zoom) => getClusteredPins(get().pins, zoom),
   setPins: (pins) => set({ pins }),
   addPin: (pin) => set((s) => ({ pins: [pin, ...s.pins] })),
   removePin: (id) => set((s) => ({ pins: s.pins.filter((p) => p.id !== id) })),

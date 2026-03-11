@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import type { Pin } from "./pins";
+import { getClusteredSpots, type SpotMarkerData, SPOT_CLUSTER_ZOOM } from "@/lib/clustering";
 
 export type Spot = {
   id: string;
@@ -19,6 +20,8 @@ type SpotsStore = {
 
   // Spots on the map
   spots: Spot[];
+  clusterZoomThreshold: number;
+  getMarkerData: (zoom: number) => SpotMarkerData[];
   setSpots: (spots: Spot[]) => void;
   addSpot: (spot: Spot) => void;
   removeSpot: (id: string) => void;
@@ -39,12 +42,14 @@ type SpotsStore = {
   addSpotPin: (pin: Pin) => void;
 };
 
-export const useSpotsStore = create<SpotsStore>((set) => ({
+export const useSpotsStore = create<SpotsStore>((set, get) => ({
   isAdmin: false,
   adminCode: "",
   setAdmin: (isAdmin, code) => set({ isAdmin, ...(code !== undefined ? { adminCode: code } : {}) }),
 
   spots: [],
+  clusterZoomThreshold: SPOT_CLUSTER_ZOOM,
+  getMarkerData: (zoom) => getClusteredSpots(get().spots, zoom),
   setSpots: (spots) => set({ spots }),
   addSpot: (spot) => set((s) => ({ spots: [spot, ...s.spots] })),
   removeSpot: (id) => set((s) => ({ spots: s.spots.filter((sp) => sp.id !== id) })),
