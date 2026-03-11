@@ -81,9 +81,7 @@ function avgColorFromPins(pins: Pin[]): string {
 }
 
 // Helper: Average color from spot types
-function avgColorFromSpots(spots: Spot[]): string {
-  // For now, use a default color for spot clusters
-  // In the future, could map spot types to colors
+function avgColorFromSpots(_spots: Spot[]): string {
   return "#64748b";
 }
 
@@ -131,31 +129,32 @@ export function getClusteredPins(pins: Pin[], zoom: number): PinMarkerData[] {
 
   // Get clusters and unclustered points
   const clusterData = cluster.getClusters([-180, -90, 180, 90], zoom);
+  type PinFeature = (typeof clusterData)[number];
 
-  return clusterData.map((feature) => {
+  return clusterData.map((feature: PinFeature) => {
     if (feature.properties?.cluster) {
       // This is a cluster
       const clusterPins: Pin[] = (
-        cluster.getLeaves(feature.id as number) as any[]
+        cluster.getLeaves(feature.id as number) as Array<{ properties: { pin: Pin } }>
       ).map((leaf) => leaf.properties.pin);
 
       return {
         id: `cluster-${feature.id}`,
         lat: feature.geometry.coordinates[1],
         lng: feature.geometry.coordinates[0],
-        isCluster: true,
+        isCluster: true as const,
         count: feature.properties.point_count,
         pins: clusterPins,
         avgColor: avgColorFromPins(clusterPins),
       };
     } else {
       // This is an individual pin
-      const pin = feature.properties?.pin;
+      const pin = (feature.properties as { pin: Pin }).pin;
       return {
         id: pin.id,
         lat: pin.lat,
         lng: pin.lng,
-        isCluster: false,
+        isCluster: false as const,
         pin,
       };
     }
@@ -188,31 +187,32 @@ export function getClusteredSpots(spots: Spot[], zoom: number): SpotMarkerData[]
 
   // Get clusters and unclustered points
   const clusterData = cluster.getClusters([-180, -90, 180, 90], zoom);
+  type SpotFeature = (typeof clusterData)[number];
 
-  return clusterData.map((feature) => {
+  return clusterData.map((feature: SpotFeature) => {
     if (feature.properties?.cluster) {
       // This is a cluster
       const clusterSpots: Spot[] = (
-        cluster.getLeaves(feature.id as number) as any[]
+        cluster.getLeaves(feature.id as number) as Array<{ properties: { spot: Spot } }>
       ).map((leaf) => leaf.properties.spot);
 
       return {
         id: `cluster-${feature.id}`,
         lat: feature.geometry.coordinates[1],
         lng: feature.geometry.coordinates[0],
-        isCluster: true,
+        isCluster: true as const,
         count: feature.properties.point_count,
         spots: clusterSpots,
         avgColor: avgColorFromSpots(clusterSpots),
       };
     } else {
       // This is an individual spot
-      const spot = feature.properties?.spot;
+      const spot = (feature.properties as { spot: Spot }).spot;
       return {
         id: spot.id,
         lat: spot.lat,
         lng: spot.lng,
-        isCluster: false,
+        isCluster: false as const,
         spot,
       };
     }
