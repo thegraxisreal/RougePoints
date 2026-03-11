@@ -131,8 +131,11 @@ export function getClusteredPins(pins: Pin[], zoom: number): PinMarkerData[] {
   const clusterData = cluster.getClusters([-180, -90, 180, 90], zoom);
   type PinFeature = (typeof clusterData)[number];
 
+  type PinProps = { cluster: true; point_count: number } | { cluster?: never; pin: Pin; index: number };
+
   return clusterData.map((feature: PinFeature) => {
-    if (feature.properties?.cluster) {
+    const props = feature.properties as PinProps;
+    if (props.cluster) {
       // This is a cluster
       const clusterPins: Pin[] = (
         cluster.getLeaves(feature.id as number) as Array<{ properties: { pin: Pin } }>
@@ -143,19 +146,17 @@ export function getClusteredPins(pins: Pin[], zoom: number): PinMarkerData[] {
         lat: feature.geometry.coordinates[1],
         lng: feature.geometry.coordinates[0],
         isCluster: true as const,
-        count: feature.properties.point_count,
+        count: props.point_count,
         pins: clusterPins,
         avgColor: avgColorFromPins(clusterPins),
       };
     } else {
-      // This is an individual pin
-      const pin = (feature.properties as { pin: Pin }).pin;
       return {
-        id: pin.id,
-        lat: pin.lat,
-        lng: pin.lng,
+        id: props.pin.id,
+        lat: props.pin.lat,
+        lng: props.pin.lng,
         isCluster: false as const,
-        pin,
+        pin: props.pin,
       };
     }
   });
@@ -189,8 +190,11 @@ export function getClusteredSpots(spots: Spot[], zoom: number): SpotMarkerData[]
   const clusterData = cluster.getClusters([-180, -90, 180, 90], zoom);
   type SpotFeature = (typeof clusterData)[number];
 
+  type SpotProps = { cluster: true; point_count: number } | { cluster?: never; spot: Spot; index: number };
+
   return clusterData.map((feature: SpotFeature) => {
-    if (feature.properties?.cluster) {
+    const props = feature.properties as SpotProps;
+    if (props.cluster) {
       // This is a cluster
       const clusterSpots: Spot[] = (
         cluster.getLeaves(feature.id as number) as Array<{ properties: { spot: Spot } }>
@@ -201,19 +205,17 @@ export function getClusteredSpots(spots: Spot[], zoom: number): SpotMarkerData[]
         lat: feature.geometry.coordinates[1],
         lng: feature.geometry.coordinates[0],
         isCluster: true as const,
-        count: feature.properties.point_count,
+        count: props.point_count,
         spots: clusterSpots,
         avgColor: avgColorFromSpots(clusterSpots),
       };
     } else {
-      // This is an individual spot
-      const spot = (feature.properties as { spot: Spot }).spot;
       return {
-        id: spot.id,
-        lat: spot.lat,
-        lng: spot.lng,
+        id: props.spot.id,
+        lat: props.spot.lat,
+        lng: props.spot.lng,
         isCluster: false as const,
-        spot,
+        spot: props.spot,
       };
     }
   });
