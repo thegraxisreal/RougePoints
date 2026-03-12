@@ -40,6 +40,10 @@ export async function GET(req: NextRequest) {
       createdAt: true,
       author: { select: { handle: true, avatarUrl: true } },
       authorId: true,
+      media: {
+        where: { state: "ready" },
+        select: { id: true, s3Key: true, state: true },
+      },
     },
     orderBy: { createdAt: "desc" },
     take: 500,

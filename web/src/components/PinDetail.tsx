@@ -196,6 +196,27 @@ export function PinDetail() {
               <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2 mb-4">{deleteError}</p>
             )}
 
+            {/* Media strip */}
+            {selectedPin.media && selectedPin.media.length > 0 && (
+              <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
+                {selectedPin.media.map((m) => (
+                  <div
+                    key={m.id}
+                    className="flex-shrink-0 rounded-xl overflow-hidden border border-white/[0.08] bg-black/20"
+                    style={{ height: "160px" }}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${m.s3Key}`}
+                      alt=""
+                      className="h-full w-auto max-w-xs object-cover"
+                      loading="lazy"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+
             {/* Reactions */}
             <div className="flex gap-2 flex-wrap">
               {REACTIONS.map((r) => {

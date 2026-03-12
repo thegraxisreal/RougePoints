@@ -13,7 +13,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
     where: { id },
     include: {
       author: { select: { handle: true, avatarUrl: true } },
-      media: { select: { id: true, s3Key: true, mimeType: true, width: true, height: true } },
+      media: {
+        where: { state: "ready" },
+        select: { id: true, s3Key: true, mimeType: true, width: true, height: true, state: true },
+      },
     },
   });
 
