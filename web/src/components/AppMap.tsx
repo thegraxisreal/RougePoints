@@ -169,7 +169,7 @@ function MapViewportSyncr() {
   const setViewport = useViewportStore((state) => state.setViewport);
 
   useMapEvents({
-    move: () => {
+    moveend: () => {
       const center = map.getCenter();
       const zoom = map.getZoom();
       setViewport({
@@ -320,7 +320,7 @@ function reactionHash(pin: Pin): string {
 function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
   const map = useMap();
   const { zoom } = useViewportStore();
-  const { getMarkerData } = usePinsStore();
+  const { pins, getMarkerData } = usePinsStore();
   const markersRef = useRef<Map<string, { marker: L.Marker; hash?: string }>>(new Map());
   // Track which pins randomly got a title card (1 in 5 chance, persists until page reload)
   const titleCardRollsRef = useRef<Map<string, boolean>>(new Map());
@@ -396,7 +396,7 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
         markersRef.current.set(pin.id, { marker, hash });
       }
     }
-  }, [map, zoom, getMarkerData]);
+  }, [map, zoom, pins, getMarkerData]);
 
   return null;
 }
@@ -405,7 +405,7 @@ function MarkerLayer({ onPinClick }: { onPinClick: (pin: Pin) => void }) {
 function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void }) {
   const map = useMap();
   const { zoom } = useViewportStore();
-  const { getMarkerData } = useSpotsStore();
+  const { spots, getMarkerData } = useSpotsStore();
   const markersRef = useRef<Map<string, { marker: L.Marker; hash?: string }>>(new Map());
   const onSpotClickRef = useRef(onSpotClick);
   onSpotClickRef.current = onSpotClick;
@@ -473,7 +473,7 @@ function SpotMarkerLayer({ onSpotClick }: { onSpotClick: (spot: Spot) => void })
         markersRef.current.set(spot.id, { marker, hash });
       }
     }
-  }, [map, zoom, getMarkerData]);
+  }, [map, zoom, spots, getMarkerData]);
 
   return null;
 }
