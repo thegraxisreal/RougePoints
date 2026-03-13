@@ -50,6 +50,21 @@ export function PinDetail() {
       .catch(() => setCurrentUserId(null));
   }, [isSignedIn]);
 
+  // Fetch full pin data (including media) whenever a pin is selected
+  useEffect(() => {
+    if (!selectedPin?.id) return;
+    let cancelled = false;
+    fetch(`/api/pins/${selectedPin.id}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (cancelled || !data) return;
+        // Merge fresh media (and any other fields) into the store
+        updatePin(data.id, { media: data.media ?? [] });
+      })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [selectedPin?.id, updatePin]);
+
   // Reset state when a different pin is selected
   useEffect(() => {
     setDeleteError(null);
@@ -128,6 +143,49 @@ export function PinDetail() {
       <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:w-[520px] animate-slide-up">
         <div className="rounded-t-3xl sm:rounded-3xl border border-white/[0.08] bg-[#13131a] shadow-2xl shadow-black/70 overflow-hidden">
 
+          {/* Hero image — full-width above all content */}
+          {selectedPin.media && selectedPin.media.length > 0 && (
+            <div className="relative w-full max-h-52 overflow-hidden bg-black/40">
+              {selectedPin.media.length === 1 ? (
+                /* Single image — full width */
+                <>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${selectedPin.media[0].s3Key}`}
+                    alt=""
+                    className="w-full max-h-52 object-cover"
+                    loading="lazy"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#13131a] via-transparent to-transparent" />
+                </>
+              ) : (
+                /* Multiple images — horizontal scroll */
+                <div className="flex gap-1 overflow-x-auto h-52" style={{ scrollbarWidth: "none" }}>
+                  {selectedPin.media.map((m) => (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      key={m.id}
+                      src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${m.s3Key}`}
+                      alt=""
+                      className="h-full w-auto object-cover flex-shrink-0"
+                      loading="lazy"
+                    />
+                  ))}
+                </div>
+              )}
+              {/* Close button overlaid on image */}
+              <button
+                onClick={() => selectPin(null)}
+                title="Close"
+                className="absolute top-3 right-3 flex h-8 w-8 items-center justify-center rounded-full bg-black/50 backdrop-blur-sm text-white/70 hover:text-white hover:bg-black/70 transition"
+              >
+                <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
+            </div>
+          )}
+
           {/* Drag handle — also acts as a close target on mobile */}
           <div
             className="flex justify-center pt-3.5 pb-2 cursor-pointer sm:cursor-default"
@@ -161,15 +219,18 @@ export function PinDetail() {
                     </svg>
                   </button>
                 )}
-                <button
-                  onClick={() => selectPin(null)}
-                  title="Close"
-                  className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white/50 hover:text-white hover:bg-white/15 transition"
-                >
-                  <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
-                    <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-                  </svg>
-                </button>
+                {/* Only show standalone close button when there's no hero image (which has its own) */}
+                {!(selectedPin.media && selectedPin.media.length > 0) && (
+                  <button
+                    onClick={() => selectPin(null)}
+                    title="Close"
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-white/[0.08] text-white/50 hover:text-white hover:bg-white/15 transition"
+                  >
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5">
+                      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                    </svg>
+                  </button>
+                )}
               </div>
             </div>
 
@@ -194,27 +255,6 @@ export function PinDetail() {
 
             {deleteError && (
               <p className="text-xs text-red-400 bg-red-400/10 rounded-lg px-3 py-2 mb-4">{deleteError}</p>
-            )}
-
-            {/* Media strip */}
-            {selectedPin.media && selectedPin.media.length > 0 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 mb-5 -mx-1 px-1" style={{ scrollbarWidth: "none" }}>
-                {selectedPin.media.map((m) => (
-                  <div
-                    key={m.id}
-                    className="flex-shrink-0 rounded-xl overflow-hidden border border-white/[0.08] bg-black/20"
-                    style={{ height: "160px" }}
-                  >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${m.s3Key}`}
-                      alt=""
-                      className="h-full w-auto max-w-xs object-cover"
-                      loading="lazy"
-                    />
-                  </div>
-                ))}
-              </div>
             )}
 
             {/* Reactions */}

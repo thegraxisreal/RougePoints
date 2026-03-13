@@ -15,7 +15,7 @@ const CATEGORIES = [
 type UploadState = "idle" | "uploading" | "done" | "error";
 
 export function ComposeModal() {
-  const { composeOpen, pendingCoords, closeCompose, addPin } = usePinsStore();
+  const { composeOpen, pendingCoords, closeCompose, addPin, updatePin } = usePinsStore();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("funny");
   const [loading, setLoading] = useState(false);
@@ -55,8 +55,8 @@ export function ComposeModal() {
     });
   }
 
-  async function uploadImage(pinId: string): Promise<void> {
-    if (!imageFile || !imagePreview) return;
+  async function uploadImage(pinId: string): Promise<{ id: string; s3Key: string; state: string }> {
+    if (!imageFile || !imagePreview) throw new Error("No image");
     setUploadState("uploading");
 
     // Step 1: Get presigned URL
@@ -75,7 +75,7 @@ export function ComposeModal() {
       throw new Error(data.error ?? "Failed to get upload URL");
     }
 
-    const { mediaId, uploadUrl } = await presignRes.json();
+    const { mediaId, uploadUrl, key } = await presignRes.json();
 
     // Step 2: PUT directly to S3 (file bytes never go through our server)
     const putRes = await fetch(uploadUrl, {
@@ -97,6 +97,7 @@ export function ComposeModal() {
     });
 
     setUploadState("done");
+    return { id: mediaId, s3Key: key, state: "ready" };
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -126,7 +127,9 @@ export function ComposeModal() {
       // Step 2: Upload image if selected (failure is non-blocking — pin is already created)
       if (imageFile) {
         try {
-          await uploadImage(pin.id);
+          const media = await uploadImage(pin.id);
+          // Update the store pin so PinDetail can show the image immediately
+          updatePin(pin.id, { media: [media] });
         } catch (imgErr) {
           console.error("Image upload failed (pin still created):", imgErr);
           setUploadState("error");
