@@ -55,7 +55,7 @@ export function ComposeModal() {
     });
   }
 
-  async function uploadImage(pinId: string): Promise<{ id: string; s3Key: string; state: string }> {
+  async function uploadImage(pinId: string): Promise<{ id: string; s3Key: string; url: string; state: string }> {
     if (!imageFile || !imagePreview) throw new Error("No image");
     setUploadState("uploading");
 
@@ -75,7 +75,7 @@ export function ComposeModal() {
       throw new Error(data.error ?? "Failed to get upload URL");
     }
 
-    const { mediaId, uploadUrl, key } = await presignRes.json();
+    const { mediaId, uploadUrl, key, publicUrl } = await presignRes.json();
 
     // Step 2: PUT directly to S3 (file bytes never go through our server)
     const putRes = await fetch(uploadUrl, {
@@ -97,7 +97,7 @@ export function ComposeModal() {
     });
 
     setUploadState("done");
-    return { id: mediaId, s3Key: key, state: "ready" };
+    return { id: mediaId, s3Key: key, url: publicUrl, state: "ready" };
   }
 
   async function handleSubmit(e: React.FormEvent) {

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { getMediaUrl } from "@/lib/media";
 
 // ─── GET /api/pins?swLat=&swLng=&neLat=&neLng= ───────────────────────────────
 // Public — returns visible pins inside a map bounding box.
@@ -49,7 +50,13 @@ export async function GET(req: NextRequest) {
     take: 500,
   });
 
-  return NextResponse.json(pins);
+  // Attach public URLs to media
+  const pinsWithUrls = pins.map((pin: (typeof pins)[number]) => ({
+    ...pin,
+    media: pin.media.map((m: (typeof pin.media)[number]) => ({ ...m, url: getMediaUrl(m.s3Key) })),
+  }));
+
+  return NextResponse.json(pinsWithUrls);
 }
 
 // ─── POST /api/pins ───────────────────────────────────────────────────────────

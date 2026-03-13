@@ -3,6 +3,7 @@ import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { getMediaUrl } from "@/lib/media";
 
 const ALLOWED_MIME_TYPES = [
   "image/jpeg",
@@ -103,7 +104,8 @@ export async function POST(req: NextRequest) {
 
     const uploadUrl = await getSignedUrl(client, command, { expiresIn: 300 }); // 5 min
 
-    return NextResponse.json({ mediaId: media.id, uploadUrl, key: s3Key }, { status: 201 });
+    const publicUrl = getMediaUrl(s3Key);
+    return NextResponse.json({ mediaId: media.id, uploadUrl, key: s3Key, publicUrl }, { status: 201 });
   } catch (err) {
     console.error("POST /api/media/presign error:", err);
     return NextResponse.json(

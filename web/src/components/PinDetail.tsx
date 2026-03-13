@@ -151,7 +151,7 @@ export function PinDetail() {
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${selectedPin.media[0].s3Key}`}
+                    src={selectedPin.media[0].url}
                     alt=""
                     className="w-full max-h-52 object-cover"
                     loading="lazy"
@@ -165,7 +165,7 @@ export function PinDetail() {
                     /* eslint-disable-next-line @next/next/no-img-element */
                     <img
                       key={m.id}
-                      src={`${process.env.NEXT_PUBLIC_S3_PUBLIC_URL}/${m.s3Key}`}
+                      src={m.url}
                       alt=""
                       className="h-full w-auto object-cover flex-shrink-0"
                       loading="lazy"
