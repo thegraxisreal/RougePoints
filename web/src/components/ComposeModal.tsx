@@ -90,11 +90,16 @@ export function ComposeModal() {
 
     // Step 3: Mark complete with dimensions
     const dimensions = await getImageDimensions(imagePreview);
-    await fetch(`/api/media/${mediaId}/complete`, {
+    const completeRes = await fetch(`/api/media/${mediaId}/complete`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(dimensions),
     });
+
+    if (!completeRes.ok) {
+      const data = await completeRes.json().catch(() => ({}));
+      throw new Error(data.error ?? "Failed to confirm image upload");
+    }
 
     setUploadState("done");
     return { id: mediaId, s3Key: key, url: publicUrl, state: "ready" };
@@ -133,6 +138,10 @@ export function ComposeModal() {
         } catch (imgErr) {
           console.error("Image upload failed (pin still created):", imgErr);
           setUploadState("error");
+          // Keep the modal open so the user sees the error
+          setError(imgErr instanceof Error ? `Photo upload failed: ${imgErr.message}` : "Photo upload failed");
+          setLoading(false);
+          return;
         }
       }
 
