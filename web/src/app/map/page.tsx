@@ -84,16 +84,24 @@ export default function MapPage() {
         <button
           onClick={toggleFeed}
           title={feedOpen ? "Close feed" : "Open random stories feed"}
-          className={`flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium transition ${
+          className={`relative flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition active:scale-95 ${
             feedOpen
               ? "border-amber-400/50 bg-amber-400/15 text-amber-300"
-              : "border-white/[0.08] bg-black/50 backdrop-blur-md text-white/60 hover:text-white hover:bg-white/10"
+              : "border-amber-400/30 bg-black/60 backdrop-blur-md text-amber-300 hover:bg-amber-400/10 hover:border-amber-400/50"
           }`}
+          style={feedOpen ? {} : { boxShadow: "0 0 18px rgba(251,191,36,0.18)" }}
         >
-          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+          {/* Pulse dot — only when closed, draws attention */}
+          {!feedOpen && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
+            </span>
+          )}
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
             <path fillRule="evenodd" d="M2 3.75A.75.75 0 0 1 2.75 3h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75Zm0 4.167a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Zm0 4.166a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Zm0 4.167a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
           </svg>
-          <span className="hidden sm:inline">Feed</span>
+          <span>Feed</span>
         </button>
 
         {/* Map mode toggles */}
