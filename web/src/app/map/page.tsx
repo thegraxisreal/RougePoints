@@ -9,6 +9,8 @@ import { PinDetail } from "@/components/PinDetail";
 import { AdminLock } from "@/components/AdminLock";
 import { SpotCompose } from "@/components/SpotCompose";
 import { SpotView } from "@/components/SpotView";
+import { FeedSidebar } from "@/components/FeedSidebar";
+import { useFeedStore } from "@/store/feed";
 import { useCallback, useState } from "react";
 
 const AppMap = dynamic(
@@ -22,6 +24,7 @@ export default function MapPage() {
   const [satelliteHintDismissed, setSatelliteHintDismissed] = useState(false);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
+  const { feedOpen, toggleFeed } = useFeedStore();
 
   const handlePinClick = useCallback(
     (pin: Pin) => selectPin(pin),
@@ -65,7 +68,7 @@ export default function MapPage() {
             <div className="rounded-xl border border-white/10 bg-black/80 backdrop-blur-md px-3.5 py-2.5 shadow-xl w-max">
               <div className="flex items-center gap-2">
                 <span className="text-white font-semibold text-sm">RoguePoints</span>
-                <span className="rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-400 border border-amber-400/20">v0.2</span>
+                <span className="rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-400 border border-amber-400/20">v0.4</span>
               </div>
               <div className="mt-1 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -75,8 +78,34 @@ export default function MapPage() {
           </div>
         </div>
 
+        {/* Feed toggle + Map mode toggles */}
+        <div className="pointer-events-auto flex items-center gap-2">
+        {/* Feed toggle button */}
+        <button
+          onClick={toggleFeed}
+          title={feedOpen ? "Close feed" : "Open random stories feed"}
+          className={`relative flex items-center gap-2 rounded-full border px-4 py-2.5 text-sm font-semibold transition active:scale-95 ${
+            feedOpen
+              ? "border-amber-400/50 bg-amber-400/15 text-amber-300"
+              : "border-amber-400/30 bg-black/60 backdrop-blur-md text-amber-300 hover:bg-amber-400/10 hover:border-amber-400/50"
+          }`}
+          style={feedOpen ? {} : { boxShadow: "0 0 18px rgba(251,191,36,0.18)" }}
+        >
+          {/* Pulse dot — only when closed, draws attention */}
+          {!feedOpen && (
+            <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
+            </span>
+          )}
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 flex-shrink-0">
+            <path fillRule="evenodd" d="M2 3.75A.75.75 0 0 1 2.75 3h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75Zm0 4.167a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Zm0 4.166a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Zm0 4.167a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+          </svg>
+          <span>Feed</span>
+        </button>
+
         {/* Map mode toggles */}
-        <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md px-1 py-1">
+        <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md px-1 py-1">
           {/* Light / Dark toggle */}
           <button
             onClick={() => { if (!satelliteMode) setLightMode((v) => !v); }}
@@ -128,6 +157,7 @@ export default function MapPage() {
               </svg>
             </button>
           </div>
+        </div>
         </div>
 
         {/* User avatar */}
@@ -242,6 +272,7 @@ export default function MapPage() {
       <SpotCompose />
       <PinDetail />
       <SpotView />
+      <FeedSidebar />
     </div>
   );
 }

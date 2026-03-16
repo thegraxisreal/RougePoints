@@ -7,6 +7,7 @@ import "leaflet/dist/leaflet.css";
 import { usePinsStore, Pin } from "@/store/pins";
 import { useSpotsStore, Spot } from "@/store/spots";
 import { useViewportStore } from "@/store/viewport";
+import { useFeedStore } from "@/store/feed";
 import { type PinMarkerData, type SpotMarkerData } from "@/lib/clustering";
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -300,6 +301,22 @@ function ZoomToPin() {
   return null;
 }
 
+// Pans/zooms the map to whichever pin the feed is currently showing
+function FeedZoomToPin() {
+  const map = useMap();
+  const { currentFeedPin, feedOpen } = useFeedStore();
+
+  useEffect(() => {
+    if (!feedOpen || !currentFeedPin) return;
+    map.flyTo([currentFeedPin.lat, currentFeedPin.lng], 16, {
+      duration: 1.2,
+      easeLinearity: 0.4,
+    });
+  }, [currentFeedPin?.id, feedOpen, map]);
+
+  return null;
+}
+
 // Crosshair cursor when drop mode is active
 function CursorEffect() {
   const map = useMap();
@@ -536,6 +553,7 @@ export function AppMap({ onPinClick, onSpotClick, lightMode = false, satelliteMo
         <MapClickHandler />
         <CursorEffect />
         <ZoomToPin />
+        <FeedZoomToPin />
         <MarkerLayer onPinClick={onPinClick} />
         <SpotMarkerLayer onSpotClick={onSpotClick} />
       </MapContainer>
