@@ -68,7 +68,7 @@ export default function MapPage() {
             <div className="rounded-xl border border-white/10 bg-black/80 backdrop-blur-md px-3.5 py-2.5 shadow-xl w-max">
               <div className="flex items-center gap-2">
                 <span className="text-white font-semibold text-sm">RoguePoints</span>
-                <span className="rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-400 border border-amber-400/20">v0.2</span>
+                <span className="rounded-full bg-amber-400/15 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-amber-400 border border-amber-400/20">v0.4</span>
               </div>
               <div className="mt-1 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
