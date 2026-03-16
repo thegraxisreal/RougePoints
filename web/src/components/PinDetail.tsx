@@ -140,7 +140,7 @@ export function PinDetail() {
       />
 
       {/* Panel — centered bottom sheet */}
-      <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-6 sm:left-1/2 sm:-translate-x-1/2 sm:w-[520px] animate-slide-up">
+      <div className="fixed z-50 bottom-0 left-0 right-0 sm:bottom-6 sm:left-6 sm:right-auto sm:w-[380px] animate-slide-up">
         <div className="rounded-t-3xl sm:rounded-3xl border border-white/[0.08] bg-[#13131a] shadow-2xl shadow-black/70 overflow-hidden">
 
           {/* Hero image — full-width above all content */}
