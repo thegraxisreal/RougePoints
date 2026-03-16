@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
+import { getMediaUrl } from "@/lib/media";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -13,7 +14,10 @@ export async function GET(_req: NextRequest, { params }: Params) {
     where: { id },
     include: {
       author: { select: { handle: true, avatarUrl: true } },
-      media: { select: { id: true, s3Key: true, mimeType: true, width: true, height: true } },
+      media: {
+        where: { state: "ready" },
+        select: { id: true, s3Key: true, mimeType: true, width: true, height: true, state: true },
+      },
     },
   });
 
@@ -21,7 +25,13 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
-  return NextResponse.json(pin);
+  // Attach public URLs to media
+  const pinWithUrls = {
+    ...pin,
+    media: pin.media.map((m: (typeof pin.media)[number]) => ({ ...m, url: getMediaUrl(m.s3Key) })),
+  };
+
+  return NextResponse.json(pinWithUrls);
 }
 
 // ─── DELETE /api/pins/[id] — requires auth, must be the author ───────────────
