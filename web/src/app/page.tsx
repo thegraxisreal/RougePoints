@@ -27,13 +27,13 @@ const HOW_STEPS = [
   {
     num: "02",
     title: "Write the story",
-    desc: "Text, a photo, a voice note. Keep it raw. The funniest moments with friends never need editing — just a place to live.",
+    desc: "Add a title and a photo. Keep it raw. The funniest moments never need editing — just a place to live forever.",
     accent: "rose",
   },
   {
     num: "03",
     title: "Others find it",
-    desc: "Share with everyone nearby or lock it down for just your close friends. Some stories belong to the world. Some only belong to three people.",
+    desc: "Your pin is instantly live on the map. Everyone nearby can see it, react to it, and add their own moments to the same place.",
     accent: "seafoam",
   },
 ];
@@ -54,7 +54,6 @@ const STORIES = [
       { emoji: "\ud83d\ude2d", count: 312 },
       { emoji: "\ud83d\udd25", count: 88 },
     ],
-    nearby: 8,
     avatar:
       "https://images.unsplash.com/photo-1502685104226-ee32379fefbe?auto=format&fit=crop&w=240&q=60",
     featured: true,
@@ -74,7 +73,6 @@ const STORIES = [
       { emoji: "\ud83d\ude2d", count: 541 },
       { emoji: "\u2764\ufe0f", count: 203 },
     ],
-    nearby: 12,
     avatar:
       "https://images.unsplash.com/photo-1544723795-3fb6469f5b39?auto=format&fit=crop&w=240&q=60",
     featured: false,
@@ -94,7 +92,6 @@ const STORIES = [
       { emoji: "\ud83d\ude2e", count: 719 },
       { emoji: "\ud83d\udc7b", count: 204 },
     ],
-    nearby: 5,
     avatar:
       "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=240&q=60",
     featured: false,
@@ -114,7 +111,6 @@ const STORIES = [
       { emoji: "\ud83d\ude2d", count: 891 },
       { emoji: "\ud83d\ude04", count: 340 },
     ],
-    nearby: 3,
     avatar:
       "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=240&q=60",
     featured: false,
@@ -143,7 +139,7 @@ const FEATURES = [
       </svg>
     ),
     title: "Tell the Story",
-    desc: "Attach text, pics, or voice notes. Keep it raw, short, and real.",
+    desc: "Add a title and attach a photo. Keep it raw, short, and real.",
     gradient: "from-rose-500/20 to-pink-500/10",
     borderHover: "hover:border-rose-400/30",
     wide: true,
@@ -166,8 +162,8 @@ const FEATURES = [
         <path d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
       </svg>
     ),
-    title: "Find the Hidden",
-    desc: "Hunt down mysteries and secret spots. Some pins only reveal nearby.",
+    title: "Discover Stories",
+    desc: "See the map through everyone's stories. Every pin is a moment waiting to be found.",
     gradient: "from-blue-500/20 to-indigo-500/10",
     borderHover: "hover:border-blue-400/30",
     wide: false,
@@ -600,7 +596,7 @@ export default function Home() {
               Stories on the map
             </h2>
             <p className="mt-4 text-white/40 text-lg leading-relaxed">
-              Real places. Real moments. Not for the feed.
+              Real places. Real moments. The stories that matter.
             </p>
           </div>
 
@@ -651,10 +647,6 @@ export default function Home() {
                         className={`inline-flex rounded-full border px-3 py-1 text-xs ${s.tagColor}`}
                       >
                         {s.tag}
-                      </span>
-                      <span className="flex items-center gap-1.5 text-xs text-white/25">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60 pulse-soft" />
-                        {s.nearby} nearby
                       </span>
                     </div>
                   </div>
@@ -718,12 +710,6 @@ export default function Home() {
                     {s.tag}
                   </span>
                 </div>
-
-                {/* Nearby */}
-                <div className="mt-3 flex items-center gap-1.5 text-xs text-white/20">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500/60 pulse-soft" />
-                  {s.nearby} people nearby
-                </div>
               </div>
             ))}
           </div>
@@ -747,8 +733,8 @@ export default function Home() {
                 <em className="text-white/30 italic">highlight reel.</em>
               </h2>
               <p className="mt-6 text-lg text-white/45 leading-relaxed">
-                The best stories about a place live in voice memos, group chats,
-                and bar napkins. They die there, too. RoguePoints puts them where
+                The best stories about a place get buried in group chats and
+                bar napkins. They deserve better. RoguePoints puts them where
                 they belong&mdash;on the map, exactly where they happened, forever.
               </p>
               <div className="mt-8 flex flex-col gap-3">
