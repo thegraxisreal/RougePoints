@@ -46,63 +46,51 @@ export function ComposeModal() {
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
-  async function getImageDimensions(src: string): Promise<{ width: number; height: number }> {
-    return new Promise((resolve) => {
+  // Resize and compress an image file using canvas, returning a JPEG data URL.
+  // Caps longest side at 1024px; quality 0.82 keeps most images under ~200 KB.
+  async function resizeImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
       const img = new Image();
-      img.onload = () => resolve({ width: img.naturalWidth, height: img.naturalHeight });
-      img.onerror = () => resolve({ width: 0, height: 0 });
-      img.src = src;
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        const MAX = 1024;
+        let { naturalWidth: w, naturalHeight: h } = img;
+        if (w > MAX || h > MAX) {
+          if (w >= h) { h = Math.round(h * MAX / w); w = MAX; }
+          else        { w = Math.round(w * MAX / h); h = MAX; }
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d")!.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL("image/jpeg", 0.82));
+      };
+      img.onerror = () => { URL.revokeObjectURL(objectUrl); reject(new Error("Failed to load image")); };
+      img.src = objectUrl;
     });
   }
 
   async function uploadImage(pinId: string): Promise<{ id: string; s3Key: string; url: string; state: string }> {
-    if (!imageFile || !imagePreview) throw new Error("No image");
+    if (!imageFile) throw new Error("No image");
     setUploadState("uploading");
 
-    // Step 1: Get presigned URL
-    const presignRes = await fetch("/api/media/presign", {
+    const dataUrl = await resizeImage(imageFile);
+
+    const res = await fetch("/api/media/inline", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        pinId,
-        mimeType: imageFile.type,
-        filename: imageFile.name,
-      }),
+      body: JSON.stringify({ pinId, dataUrl }),
     });
 
-    if (!presignRes.ok) {
-      const data = await presignRes.json().catch(() => ({}));
-      throw new Error(data.error ?? "Failed to get upload URL");
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.error ?? "Failed to save image");
     }
 
-    const { mediaId, uploadUrl, key, publicUrl } = await presignRes.json();
-
-    // Step 2: PUT directly to S3 (file bytes never go through our server)
-    const putRes = await fetch(uploadUrl, {
-      method: "PUT",
-      headers: { "Content-Type": imageFile.type },
-      body: imageFile,
-    });
-
-    if (!putRes.ok) {
-      throw new Error("Failed to upload image to storage");
-    }
-
-    // Step 3: Mark complete with dimensions
-    const dimensions = await getImageDimensions(imagePreview);
-    const completeRes = await fetch(`/api/media/${mediaId}/complete`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(dimensions),
-    });
-
-    if (!completeRes.ok) {
-      const data = await completeRes.json().catch(() => ({}));
-      throw new Error(data.error ?? "Failed to confirm image upload");
-    }
-
+    const { mediaId, url } = await res.json();
     setUploadState("done");
-    return { id: mediaId, s3Key: key, url: publicUrl, state: "ready" };
+    return { id: mediaId, s3Key: dataUrl, url, state: "ready" };
   }
 
   async function handleSubmit(e: React.FormEvent) {
