@@ -9,6 +9,8 @@ import { PinDetail } from "@/components/PinDetail";
 import { AdminLock } from "@/components/AdminLock";
 import { SpotCompose } from "@/components/SpotCompose";
 import { SpotView } from "@/components/SpotView";
+import { FeedSidebar } from "@/components/FeedSidebar";
+import { useFeedStore } from "@/store/feed";
 import { useCallback, useState } from "react";
 
 const AppMap = dynamic(
@@ -22,6 +24,7 @@ export default function MapPage() {
   const [satelliteHintDismissed, setSatelliteHintDismissed] = useState(false);
   const { dropMode, setDropMode, selectPin, composeOpen } = usePinsStore();
   const { spotDropMode, spotComposeOpen, selectSpot } = useSpotsStore();
+  const { feedOpen, toggleFeed } = useFeedStore();
 
   const handlePinClick = useCallback(
     (pin: Pin) => selectPin(pin),
@@ -75,8 +78,26 @@ export default function MapPage() {
           </div>
         </div>
 
+        {/* Feed toggle + Map mode toggles */}
+        <div className="pointer-events-auto flex items-center gap-2">
+        {/* Feed toggle button */}
+        <button
+          onClick={toggleFeed}
+          title={feedOpen ? "Close feed" : "Open random stories feed"}
+          className={`flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium transition ${
+            feedOpen
+              ? "border-amber-400/50 bg-amber-400/15 text-amber-300"
+              : "border-white/[0.08] bg-black/50 backdrop-blur-md text-white/60 hover:text-white hover:bg-white/10"
+          }`}
+        >
+          <svg viewBox="0 0 20 20" fill="currentColor" className="w-3.5 h-3.5">
+            <path fillRule="evenodd" d="M2 3.75A.75.75 0 0 1 2.75 3h14.5a.75.75 0 0 1 0 1.5H2.75A.75.75 0 0 1 2 3.75Zm0 4.167a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Zm0 4.166a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Zm0 4.167a.75.75 0 0 1 .75-.75h14.5a.75.75 0 0 1 0 1.5H2.75a.75.75 0 0 1-.75-.75Z" clipRule="evenodd" />
+          </svg>
+          <span className="hidden sm:inline">Feed</span>
+        </button>
+
         {/* Map mode toggles */}
-        <div className="pointer-events-auto flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md px-1 py-1">
+        <div className="flex items-center gap-1.5 rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md px-1 py-1">
           {/* Light / Dark toggle */}
           <button
             onClick={() => { if (!satelliteMode) setLightMode((v) => !v); }}
@@ -128,6 +149,7 @@ export default function MapPage() {
               </svg>
             </button>
           </div>
+        </div>
         </div>
 
         {/* User avatar */}
@@ -242,6 +264,7 @@ export default function MapPage() {
       <SpotCompose />
       <PinDetail />
       <SpotView />
+      <FeedSidebar />
     </div>
   );
 }
