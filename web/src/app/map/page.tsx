@@ -11,6 +11,7 @@ import { SpotCompose } from "@/components/SpotCompose";
 import { SpotView } from "@/components/SpotView";
 import { FeedSidebar } from "@/components/FeedSidebar";
 import { useFeedStore } from "@/store/feed";
+import { NotificationCenter } from "@/components/NotificationCenter";
 import { useCallback, useState } from "react";
 
 const AppMap = dynamic(
@@ -160,8 +161,10 @@ export default function MapPage() {
         </div>
         </div>
 
-        {/* User avatar */}
-        <div className="pointer-events-auto rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md p-0.5">
+        {/* Notifications + User avatar */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          <NotificationCenter />
+          <div className="rounded-full border border-white/[0.08] bg-black/50 backdrop-blur-md p-0.5">
           <UserButton
             appearance={{
               variables: {
@@ -203,6 +206,7 @@ export default function MapPage() {
               },
             }}
           />
+          </div>
         </div>
       </header>
 
